@@ -70,6 +70,7 @@ public class PublisherLoginServlet extends HttpServlet {
         session.setAttribute("publisherId", publisher.getId());
         session.setAttribute("resume", publisher.getResume());
         session.setAttribute("resumeFilename", publisher.getResumeFilename());
+        session.setAttribute("role", "PUBLISHER"); // Set role dynamically
         request.getRequestDispatcher("/publisher_dashboard.jsp").forward(request, response);
     }
 }

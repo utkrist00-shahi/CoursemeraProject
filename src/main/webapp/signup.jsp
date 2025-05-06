@@ -61,7 +61,7 @@
             font-weight: bold;
             color: #1a3c34;
         }
-        .login-container {
+        .signup-container {
             background: white;
             padding: 2rem;
             border-radius: 12px;
@@ -92,7 +92,8 @@
         }
         input[type="text"],
         input[type="email"],
-        input[type="password"] {
+        input[type="password"],
+        input[type="file"] {
             width: 100%;
             padding: 0.7rem;
             border: 1px solid #ddd;
@@ -100,7 +101,7 @@
             box-sizing: border-box;
             font-size: 1rem;
         }
-        button.login-btn {
+        button.signup-btn {
             width: 100%;
             padding: 0.8rem;
             background-color: #1a3c34;
@@ -111,21 +112,21 @@
             cursor: pointer;
             margin-bottom: 1rem;
         }
-        button.login-btn:hover {
+        button.signup-btn:hover {
             background-color: #15332d;
         }
-        .signup-link {
+        .login-link {
             text-align: center;
             font-size: 0.9rem;
             color: #555;
             margin-bottom: 1rem;
         }
-        .signup-link a {
+        .login-link a {
             color: #0056d2;
             text-decoration: none;
             font-weight: bold;
         }
-        .signup-link a:hover {
+        .login-link a:hover {
             text-decoration: underline;
         }
         .back-to-home {
@@ -163,17 +164,17 @@
         <img src="logo.png" alt="Coursemera Logo">
         <span>Coursemera</span>
     </div>
-    <div class="login-container">
+    <div class="signup-container">
         <h2>Sign Up</h2>
         
         <% if (request.getAttribute("error") != null) { %>
             <div class="error"><%= request.getAttribute("error") %></div>
         <% } %>
-        <% if (request.getSession().getAttribute("successMessage") != null) { %>
-            <div class="success"><%= request.getSession().getAttribute("successMessage") %></div>
+        <% if (request.getAttribute("success") != null) { %>
+            <div class="success"><%= request.getAttribute("success") %></div>
         <% } %>
         
-        <form action="signup" method="post">
+        <form action="${pageContext.request.contextPath}/signup" method="post" id="signupForm">
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" required maxlength="50" placeholder="Enter Username">
@@ -190,16 +191,57 @@
                 <label for="confirmPassword">Confirm Password</label>
                 <input type="password" id="confirmPassword" name="confirmPassword" required minlength="8" placeholder="Confirm Password">
             </div>
-            <button type="submit" class="login-btn">Sign Up</button>
+            <div class="form-group">
+                <label for="profileImage">Profile Image (PNG/JPG, max 5MB, optional)</label>
+                <input type="file" id="profileImage" name="profileImage" accept="image/png,image/jpeg">
+            </div>
+            <button type="submit" class="signup-btn">Sign Up</button>
         </form>
         
-        <div class="signup-link">
-            Already have an account? <a href="login.jsp">Login</a>
+        <div class="login-link">
+            Already have an account? <a href="${pageContext.request.contextPath}/login">Login</a>
         </div>
         
         <div class="back-to-home">
-            <a href="<%= request.getContextPath() %>/index.jsp">Back to Home</a>
+            <a href="${pageContext.request.contextPath}/index.jsp">Back to Home</a>
         </div>
     </div>
+
+    <script>
+        const form = document.getElementById('signupForm');
+        const fileInput = document.getElementById('profileImage');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+
+        form.addEventListener('submit', function(e) {
+            // Password confirmation validation
+            if (passwordInput.value !== confirmPasswordInput.value) {
+                alert('Passwords do not match.');
+                e.preventDefault();
+                return;
+            }
+
+            // File upload handling
+            const file = fileInput.files[0];
+            if (file) {
+                // Set enctype to multipart/form-data only if a file is selected
+                form.setAttribute('enctype', 'multipart/form-data');
+                const validTypes = ['image/png', 'image/jpeg'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Only PNG or JPEG images are allowed.');
+                    e.preventDefault();
+                    return;
+                }
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Image size exceeds 5MB limit.');
+                    e.preventDefault();
+                    return;
+                }
+            } else {
+                // Remove enctype if no file, allowing default submission
+                form.removeAttribute('enctype');
+            }
+        });
+    </script>
 </body>
 </html>

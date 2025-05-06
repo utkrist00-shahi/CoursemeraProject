@@ -1,22 +1,106 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.util.List, model.Courses, dao.CoursesDAO, model.Publisher, dao.PublisherDAO" %>
+<%
+// Prevent caching
+response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+response.setHeader("Pragma", "no-cache");
+response.setDateHeader("Expires", 0);
+
+// Check logout
+String logout = request.getParameter("logout");
+if ("true".equals(logout)) {
+    if (session != null) {
+        session.invalidate();
+    }
+    response.sendRedirect("index.jsp");
+    return;
+}
+
+// Session attributes
+String firstName = (String) session.getAttribute("firstName");
+String lastName = (String) session.getAttribute("lastName");
+String email = (String) session.getAttribute("email");
+String role = (String) session.getAttribute("role");
+Integer publisherId = (Integer) session.getAttribute("publisherId");
+
+// Redirect if not a publisher
+if (!"PUBLISHER".equals(role) || publisherId == null) {
+    response.sendRedirect("publisher_login.jsp");
+    return;
+}
+
+// Fetch publisher's courses with null check
+CoursesDAO coursesDAO = new CoursesDAO();
+List<Courses> publisherCourses = null;
+if (publisherId != null) {
+    publisherCourses = coursesDAO.getCoursesByPublisher(publisherId);
+} else {
+    publisherCourses = List.of(); // Empty list if publisherId is null
+}
+
+// Fetch publisher details for profile
+PublisherDAO publisherDAO = new PublisherDAO();
+Publisher publisher = publisherDAO.getPublisherByEmail(email);
+
+// Convert profile picture to Base64 for display
+String profilePictureBase64 = null;
+if (publisher != null && publisher.getProfilePicture() != null) {
+    profilePictureBase64 = java.util.Base64.getEncoder().encodeToString(publisher.getProfilePicture());
+}
+
+// Handle messages from session
+String message = (String) session.getAttribute("message");
+String error = (String) session.getAttribute("error");
+// Clear session attributes after retrieving them
+if (message != null) {
+    session.removeAttribute("message");
+}
+if (error != null) {
+    session.removeAttribute("error");
+}
+%>
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Publisher Dashboard - Coursemera</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        :root {
+            --primary-color: #4a6bff;
+            --secondary-color: #ff6b6b;
+            --accent-color: #6bceff;
+            --dark-color: #2b2d42;
+            --light-color: #f8f9fa;
+            --text-color: #2d3436;
+            --light-text: #636e72;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f1f1f1;
-            color: #333;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--light-color);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
         header {
             background-color: #fff;
             padding: 20px 40px;
@@ -24,15 +108,6 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        header .logo-container {
-            display: flex;
-            align-items: center;
-        }
-        header .logo {
-            width: 80px;
-            height: 80px;
-            margin-right: 10px;
         }
         header h1 {
             font-size: 24px;
@@ -47,23 +122,27 @@
             align-items: center;
             gap: 20px;
         }
-        header nav .publisher-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #fff;
+        header nav a {
+            color: #666;
             font-size: 16px;
-            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            position: relative;
+            transition: color 0.3s ease;
+            text-decoration: none;
             padding: 8px 16px;
             border-radius: 20px;
+            font-weight: 600;
+        }
+        header nav a:hover {
+            color: #333;
+        }
+        header nav a.nav-link {
+            background: linear-gradient(135deg, #3498db, #1e6bb8);
+            color: #fff;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
         }
-        header nav .publisher-info i {
-            color: #fff;
-        }
-        header nav .publisher-info:hover {
-            background: linear-gradient(135deg, #27ae60, #219653);
+        header nav a.nav-link:hover {
+            background: linear-gradient(135deg, #4aa3e8, #2b82d1);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             transform: scale(1.05);
         }
@@ -75,76 +154,245 @@
             font-weight: 600;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
-            text-decoration: none;
         }
         header nav a.logout-button:hover {
             background: linear-gradient(135deg, #ff6655, #e74c3c);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             transform: scale(1.05);
         }
-        .dashboard-container {
+        .logo {
+            width: 80px;
+            height: 80px;
+        }
+
+        .main-content {
             flex: 1;
             padding: 40px 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 16px;
             text-align: center;
         }
-        .dashboard-container h2 {
-            font-size: 28px;
-            margin: 0 0 20px;
-            color: #333;
+
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
         }
-        .dashboard-nav {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 30px;
+
+        .course-card {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            position: relative;
         }
-        .dashboard-nav button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 20px;
-            font-size: 16px;
+
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .course-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+
+        .course-content {
+            padding: 16px;
+        }
+
+        .course-category {
+            font-size: 12px;
+            color: var(--primary-color);
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            margin-bottom: 8px;
         }
-        .dashboard-nav button.active {
-            background: linear-gradient(135deg, #3498db, #1e90ff);
-            color: #fff;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+
+        .course-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
         }
-        .dashboard-nav button:not(.active) {
-            background: linear-gradient(135deg, #ccc, #aaa);
-            color: #333;
+
+        .course-instructor {
+            font-size: 14px;
+            color: var(--light-text);
+            margin-bottom: 12px;
         }
-        .dashboard-nav button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
-        .dashboard-content {
+
+        .course-meta {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
+            margin-bottom: 12px;
         }
-        .dashboard-content p {
-            font-size: 16px;
+
+        .course-price {
+            font-weight: 700;
+            color: var(--dark-color);
+        }
+
+        .course-rating {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stars {
+            color: #ffc107;
+        }
+
+        .rating-count {
+            font-size: 12px;
+            color: var(--light-text);
+        }
+
+        .edit-form, .upload-form, .profile-form {
+            display: block;
+            padding: 16px;
+            background: #f0f4ff;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .edit-form label, .upload-form label, .profile-form label {
+            display: block;
+            margin: 5px 0 2px;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .edit-form input[type="text"],
+        .edit-form input[type="number"],
+        .edit-form input[type="file"],
+        .upload-form input[type="text"],
+        .upload-form input[type="number"],
+        .upload-form input[type="file"],
+        .profile-form input[type="text"],
+        .profile-form input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: var(--border-radius);
+            box-sizing: border-box;
+        }
+
+        .edit-form img {
+            max-width: 100px;
+            max-height: 100px;
+            margin: 5px 0;
+            border-radius: var(--border-radius);
+        }
+
+        .profile-form .profile-pic-container {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+        }
+
+        .profile-form img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-form .no-pic {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: #666;
-            margin: 0 0 20px;
+            font-size: 14px;
         }
-        .dashboard-content a {
-            background: linear-gradient(135deg, #3498db, #1e90ff);
+
+        .edit-btn, .delete-btn, .save-btn, .cancel-btn, .upload-btn {
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .edit-btn, .delete-btn {
+            flex: 1;
+            height: 40px;
+            line-height: 20px;
+        }
+
+        .edit-btn {
+            background: #f1c40f;
             color: #fff;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 16px;
-            text-decoration: none;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
         }
-        .dashboard-content a:hover {
-            background: linear-gradient(135deg, #2980b9, #1e90ff);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            transform: scale(1.05);
+
+        .delete-btn {
+            background: #e74c3c;
+            color: #fff;
         }
+
+        .save-btn, .upload-btn {
+            background: var(--primary-color);
+            color: white;
+            width: 48%;
+        }
+
+        .cancel-btn {
+            background: #ccc;
+            color: black;
+            width: 48%;
+        }
+
+        .edit-btn:hover, .delete-btn:hover, .save-btn:hover, .cancel-btn:hover, .upload-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .message {
+            color: #27ae60;
+            font-size: 14px;
+            text-align: center;
+            margin: 10px 0;
+        }
+
         footer {
             background-color: #1a1a1a;
             color: #fff;
@@ -153,6 +401,7 @@
             flex-direction: column;
             align-items: center;
             gap: 40px;
+            margin-top: auto;
         }
         .footer-sections {
             display: flex;
@@ -173,7 +422,6 @@
             font-size: 14px;
             color: #ccc;
             margin: 0 0 10px;
-            text-decoration: none;
         }
         .footer-section a:hover {
             color: #fff;
@@ -190,54 +438,209 @@
             color: #ccc;
             text-align: center;
         }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 16px;
+            }
+            header nav {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .profile-form .profile-pic-container {
+                position: static;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .profile-form img, .profile-form .no-pic {
+                margin: 0 auto;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header>
-        <div class="logo-container">
+        <div class="flex items-center">
             <img src="logo.png" alt="Coursemera Logo" class="logo">
             <h1>Coursemera</h1>
         </div>
         <nav>
-            <div class="publisher-info">
-                <i class="fas fa-user"></i>
-                <span><%= session.getAttribute("username") != null ? session.getAttribute("username") : "Publisher" %></span>
-                <span><%= session.getAttribute("email") != null ? session.getAttribute("email") : "publisher@coursemera.com" %></span>
-            </div>
-            <a href="publisher_dashboard.jsp?logout=true" class="logout-button">Logout</a>
+            <a href="#" class="nav-link" onclick="showSection('manage-courses')">Manage Courses</a>
+            <a href="#" class="nav-link" onclick="showSection('my-courses')">My Courses</a>
+            <a href="#" class="nav-link" onclick="showSection('manage-profile')">Manage Profile</a>
+            <a href="?logout=true" class="logout-button">Logout</a>
         </nav>
     </header>
 
-    <!-- Dashboard Content -->
-    <div class="dashboard-container">
-        <h2>Publisher Dashboard</h2>
-        <div class="dashboard-nav">
-            <button onclick="showSection('manage-courses')">Manage Courses</button>
-            <button onclick="showSection('my-courses')">My Courses</button>
-            <button class="active" onclick="showSection('manage-profile')">Manage Profile</button>
-        </div>
-        <div class="dashboard-content" id="manage-courses-section" style="display: none;">
-            <h3>Manage Courses</h3>
-            <p>Create, edit, or delete your courses here.</p>
-        </div>
-        <div class="dashboard-content" id="my-courses-section" style="display: none;">
-            <h3>My Courses</h3>
-            <p>View your published courses and their performance.</p>
-        </div>
-        <div class="dashboard-content" id="manage-profile-section">
-            <h3>Manage Profile</h3>
-            <p>Welcome, <%= session.getAttribute("firstName") %>!</p>
-            <p>Manage your publisher profile on Coursemera.</p>
-            <% if (session.getAttribute("resume") != null && session.getAttribute("resumeFilename") != null) { %>
-                <p>Your uploaded resume: <a href="download_resume"><%= session.getAttribute("resumeFilename") %></a></p>
-            <% } else { %>
-                <p>No resume uploaded.</p>
-            <% } %>
-        </div>
+    <div class="main-content">
+        <section id="manage-courses" class="courses-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Manage Courses</h2>
+                </div>
+                <% if (message != null) { %>
+                    <p class="message"><%= message %></p>
+                <% } %>
+                <% if (error != null) { %>
+                    <p class="error"><%= error %></p>
+                <% } %>
+                <div class="upload-form">
+                    <form action="${pageContext.request.contextPath}/CourseManagementServlet" method="post" enctype="multipart/form-data" onsubmit="return validateUploadForm(this)">
+                        <input type="hidden" name="action" value="create">
+                        <input type="hidden" name="publisherId" value="<%= publisherId %>">
+                        <label for="title">Title:</label>
+                        <input type="text" id="title" name="title" required>
+                        <label for="category">Category:</label>
+                        <input type="text" id="category" name="category" required>
+                        <label for="instructor">Instructor:</label>
+                        <input type="text" id="instructor" name="instructor" required>
+                        <label for="price">Price:</label>
+                        <input type="number" id="price" name="price" step="0.01" min="0" required>
+                        <label for="image">Image:</label>
+                        <input type="file" id="image" name="image" accept="image/*" required>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="submit" class="upload-btn">Upload</button>
+                            <button type="reset" class="cancel-btn">Reset</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section id="my-courses" class="courses-section" style="display: none;">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">My Courses</h2>
+                </div>
+                <% if (message != null) { %>
+                    <p class="message"><%= message %></p>
+                <% } %>
+                <% if (error != null) { %>
+                    <p class="error"><%= error %></p>
+                <% } %>
+                <div class="course-grid">
+                    <% 
+                        if (publisherCourses != null && !publisherCourses.isEmpty()) {
+                            for (Courses course : publisherCourses) {
+                                if (course != null) {
+                                    Integer courseId = course.getId();
+                                    if (courseId != null && courseId > 0) {
+                                        String courseIdStr = String.valueOf(courseId);
+                                        String imagePath = course.getImagePath();
+                                        String fullImagePath = imagePath != null && !imagePath.isEmpty() ? request.getContextPath() + "/" + imagePath : "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+                    %>
+                        <div class="course-card" id="course-<%= courseIdStr %>">
+                            <div class="course-display">
+                                <img src="<%= fullImagePath %>" alt="<%= course.getTitle() != null ? course.getTitle() : "Course" %>" class="course-image">
+                                <div class="course-content">
+                                    <div class="course-category"><%= course.getCategory() != null ? course.getCategory() : "No Category" %></div>
+                                    <h3 class="course-title"><%= course.getTitle() != null ? course.getTitle() : "No Title" %></h3>
+                                    <div class="course-instructor"><%= course.getInstructor() != null ? course.getInstructor() : "No Instructor" %></div>
+                                    <div class="course-meta">
+                                        <div class="course-price">$<%= String.format("%.2f", course.getPrice()) %></div>
+                                        <div class="course-rating">
+                                            <div class="stars">★★★★★</div>
+                                            <div class="rating-count">(0)</div>
+                                        </div>
+                                    </div>
+                                    <div class="button-container">
+                                        <button class="edit-btn" onclick="toggleEditForm('<%= courseIdStr %>')">Edit</button>
+                                        <form action="${pageContext.request.contextPath}/CourseManagementServlet" method="post" style="flex: 1;">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="courseId" value="<%= courseIdStr %>">
+                                            <button type="submit" class="delete-btn">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="edit-form" id="edit-form-<%= courseIdStr %>" style="display: none;">
+                                <form action="${pageContext.request.contextPath}/CourseManagementServlet" method="post" enctype="multipart/form-data" onsubmit="return validateForm(this)">
+                                    <input type="hidden" name="action" value="update">
+                                    <input type="hidden" name="courseId" value="<%= courseIdStr %>">
+                                    <label for="title-<%= courseIdStr %>">Title:</label>
+                                    <input type="text" id="title-<%= courseIdStr %>" name="title" value="<%= course.getTitle() != null ? course.getTitle() : "" %>" required>
+                                    <label for="category-<%= courseIdStr %>">Category:</label>
+                                    <input type="text" id="category-<%= courseIdStr %>" name="category" value="<%= course.getCategory() != null ? course.getCategory() : "" %>" required>
+                                    <label for="instructor-<%= courseIdStr %>">Instructor:</label>
+                                    <input type="text" id="instructor-<%= courseIdStr %>" name="instructor" value="<%= course.getInstructor() != null ? course.getInstructor() : "" %>" required>
+                                    <label for="price-<%= courseIdStr %>">Price:</label>
+                                    <input type="number" id="price-<%= courseIdStr %>" name="price" step="0.01" min="0" value="<%= String.format("%.2f", course.getPrice()) %>" required>
+                                    <label for="image-<%= courseIdStr %>">Image (optional):</label>
+                                    <input type="file" id="image-<%= courseIdStr %>" name="image" accept="image/*">
+                                    <% if (imagePath != null && !imagePath.isEmpty()) { %>
+                                        <p>Current Image: <img src="<%= request.getContextPath() + "/" + imagePath %>" alt="Course Image"></p>
+                                    <% } %>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button type="submit" class="save-btn">Save</button>
+                                        <button type="button" class="cancel-btn" onclick="toggleEditForm('<%= courseIdStr %>')">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    <% 
+                                    } else {
+                                        out.println("<p class='error'>Invalid course data (ID: " + (courseId != null ? courseId : "null") + "). Skipping display.</p>");
+                                    }
+                                } else {
+                                    out.println("<p class='error'>Null course object encountered. Skipping display.</p>");
+                                }
+                            }
+                        } else {
+                    %>
+                        <p class="error">No courses found.</p>
+                    <% } %>
+                </div>
+            </div>
+        </section>
+
+        <section id="manage-profile" class="courses-section" style="display: none;">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Manage Profile</h2>
+                </div>
+                <% if (message != null) { %>
+                    <p class="message"><%= message %></p>
+                <% } %>
+                <% if (error != null) { %>
+                    <p class="error"><%= error %></p>
+                <% } %>
+                <div class="profile-form">
+                    <div class="profile-pic-container">
+                        <% if (profilePictureBase64 != null) { %>
+                            <img src="data:image/jpeg;base64,<%= profilePictureBase64 %>" alt="Profile Picture">
+                        <% } else { %>
+                            <div class="no-pic">No Image</div>
+                        <% } %>
+                    </div>
+                    <div class="profile-details">
+                        <p><strong>First Name:</strong> <%= publisher != null && publisher.getFirstName() != null ? publisher.getFirstName() : "Not set" %></p>
+                        <p><strong>Last Name:</strong> <%= publisher != null && publisher.getLastName() != null ? publisher.getLastName() : "Not set" %></p>
+                        <p><strong>Email:</strong> <%= publisher != null && publisher.getEmail() != null ? publisher.getEmail() : "Not set" %></p>
+                        <p><strong>Resume:</strong> <%= publisher != null && publisher.getResumeFilename() != null ? "<a href='download_resume'>" + publisher.getResumeFilename() + "</a>" : "No resume uploaded." %></p>
+                    </div>
+                    <form action="${pageContext.request.contextPath}/ProfileManagementServlet" method="post" enctype="multipart/form-data" onsubmit="return validateProfileForm(this)">
+                        <input type="hidden" name="action" value="update">
+                        <input type="hidden" name="publisherId" value="<%= publisherId %>">
+                        <label for="firstName">Update First Name:</label>
+                        <input type="text" id="firstName" name="firstName" value="<%= publisher != null && publisher.getFirstName() != null ? publisher.getFirstName() : "" %>" required>
+                        <label for="lastName">Update Last Name:</label>
+                        <input type="text" id="lastName" name="lastName" value="<%= publisher != null && publisher.getLastName() != null ? publisher.getLastName() : "" %>" required>
+                        <label for="email">Update Email:</label>
+                        <input type="text" id="email" name="email" value="<%= publisher != null && publisher.getEmail() != null ? publisher.getEmail() : "" %>" required>
+                        <label for="profilePicture">Update Profile Picture (optional):</label>
+                        <input type="file" id="profilePicture" name="profilePicture" accept="image/*">
+                        <div style="display: flex; gap: 8px;">
+                            <button type="submit" class="save-btn">Save Changes</button>
+                            <button type="reset" class="cancel-btn">Reset</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
     </div>
 
-    <!-- Footer -->
     <footer>
         <div class="footer-sections">
             <div class="footer-section">
@@ -268,27 +671,149 @@
         </div>
     </footer>
 
-    <!-- Handle logout -->
-    <% 
-        String logout = request.getParameter("logout");
-        if ("true".equals(logout)) {
-            session.invalidate();
-            response.sendRedirect("index.jsp");
-        }
-    %>
-
     <script>
         function showSection(sectionId) {
-            document.getElementById('manage-courses-section').style.display = sectionId === 'manage-courses' ? 'block' : 'none';
-            document.getElementById('my-courses-section').style.display = sectionId === 'my-courses' ? 'block' : 'none';
-            document.getElementById('manage-profile-section').style.display = sectionId === 'manage-profile' ? 'block' : 'none';
-
-            document.querySelectorAll('.dashboard-nav button').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.getAttribute('onclick').includes(sectionId)) {
-                    btn.classList.add('active');
+            const sections = ['manage-courses', 'my-courses', 'manage-profile'];
+            sections.forEach(id => {
+                const section = document.getElementById(id);
+                if (section) {
+                    section.style.display = id === sectionId ? 'block' : 'none';
                 }
             });
+        }
+        window.onload = function() {
+            showSection('manage-courses');
+        };
+
+        function toggleEditForm(courseId) {
+            try {
+                if (!courseId || courseId === 'null' || courseId === '' || isNaN(Number(courseId))) {
+                    console.error('Invalid courseId passed to toggleEditForm:', courseId, 'Type:', typeof courseId);
+                    alert('Error: Invalid course ID (' + courseId + '). Cannot open edit form.');
+                    return;
+                }
+
+                const numericId = Number(courseId);
+                const display = document.getElementById('course-' + courseId)?.querySelector('.course-display');
+                const form = document.getElementById('edit-form-' + courseId);
+
+                if (!display || !form) {
+                    console.error('Elements not found: course-' + courseId + ' or edit-form-' + courseId);
+                    console.log('DOM check:', {
+                        courseElement: document.getElementById('course-' + courseId),
+                        formElement: document.getElementById('edit-form-' + courseId),
+                        courseId: courseId
+                    });
+                    alert('Error: Unable to toggle edit form for course ID ' + courseId + '. Check the console for details.');
+                    return;
+                }
+
+                console.log('Toggling form for courseId:', courseId);
+                const isFormVisible = form.style.display === 'block';
+                display.style.display = isFormVisible ? 'block' : 'none';
+                form.style.display = isFormVisible ? 'none' : 'block';
+            } catch (error) {
+                console.error('Error in toggleEditForm for courseId ' + courseId + ':', error);
+                alert('An error occurred while opening the edit form for course ID ' + courseId + '. Check the console for details.');
+            }
+        }
+
+        function validateForm(form) {
+            try {
+                const title = form.querySelector('input[name="title"]').value.trim();
+                const category = form.querySelector('input[name="category"]').value.trim();
+                const instructor = form.querySelector('input[name="instructor"]').value.trim();
+                const price = parseFloat(form.querySelector('input[name="price"]').value);
+
+                if (title === '') {
+                    alert('Title is required.');
+                    return false;
+                }
+                if (category === '') {
+                    alert('Category is required.');
+                    return false;
+                }
+                if (instructor === '') {
+                    alert('Instructor is required.');
+                    return false;
+                }
+                if (isNaN(price) || price < 0) {
+                    alert('Price must be a non-negative number.');
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('Error in validateForm:', error);
+                alert('An error occurred while validating the form.');
+                return false;
+            }
+        }
+
+        function validateUploadForm(form) {
+            try {
+                const title = form.querySelector('input[name="title"]').value.trim();
+                const category = form.querySelector('input[name="category"]').value.trim();
+                const instructor = form.querySelector('input[name="instructor"]').value.trim();
+                const price = parseFloat(form.querySelector('input[name="price"]').value);
+                const image = form.querySelector('input[name="image"]').files.length;
+
+                if (title === '') {
+                    alert('Title is required.');
+                    return false;
+                }
+                if (category === '') {
+                    alert('Category is required.');
+                    return false;
+                }
+                if (instructor === '') {
+                    alert('Instructor is required.');
+                    return false;
+                }
+                if (isNaN(price) || price < 0) {
+                    alert('Price must be a non-negative number.');
+                    return false;
+                }
+                if (image === 0) {
+                    alert('An image is required for new courses.');
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('Error in validateUploadForm:', error);
+                alert('An error occurred while validating the upload form.');
+                return false;
+            }
+        }
+
+        function validateProfileForm(form) {
+            try {
+                const firstName = form.querySelector('input[name="firstName"]').value.trim();
+                const lastName = form.querySelector('input[name="lastName"]').value.trim();
+                const email = form.querySelector('input[name="email"]').value.trim();
+                const profilePicture = form.querySelector('input[name="profilePicture"]').files[0];
+
+                if (firstName === '') {
+                    alert('First name is required.');
+                    return false;
+                }
+                if (lastName === '') {
+                    alert('Last name is required.');
+                    return false;
+                }
+                if (email === '') {
+                    alert('Email is required.');
+                    return false;
+                }
+                if (profilePicture && profilePicture.size > 2 * 1024 * 1024) { // 2MB limit
+                    alert('Profile picture must be less than 2MB.');
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('Error in validateProfileForm:', error);
+                alert('An error occurred while validating the profile form.');
+                return false;
+            }
         }
     </script>
 </body>

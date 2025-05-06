@@ -11,6 +11,7 @@ public class Publisher {
     private byte[] resume;
     private String resumeFilename;
     private LocalDateTime createdAt;
+    private byte[] profilePicture;
 
     public Publisher() {
     }
@@ -87,5 +88,13 @@ public class Publisher {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public byte[] getProfilePicture() {
+        return profilePicture;
+    }
+
+    public void setProfilePicture(byte[] profilePicture) {
+        this.profilePicture = profilePicture;
     }
 }

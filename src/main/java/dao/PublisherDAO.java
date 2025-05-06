@@ -11,7 +11,6 @@ import java.util.List;
 
 public class PublisherDAO {
 
-    // Save a pending publisher to publisher_approvals table
     public boolean createPendingPublisher(Publisher publisher) {
         String sql = "INSERT INTO publisher_approvals (pa_first_name, pa_last_name, pa_email, pa_password, pa_resume, pa_resume_filename, pa_created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseUtil.getConnection();
@@ -43,7 +42,6 @@ public class PublisherDAO {
         }
     }
 
-    // Fetch a publisher from the publishers table (for login)
     public Publisher getPublisherByEmail(String email) {
         String sql = "SELECT * FROM publishers WHERE publisher_email = ?";
         try (Connection conn = DatabaseUtil.getConnection();
@@ -60,6 +58,7 @@ public class PublisherDAO {
                     publisher.setResume(rs.getBytes("publisher_resume"));
                     publisher.setResumeFilename(rs.getString("publisher_resume_filename"));
                     publisher.setCreatedAt(rs.getTimestamp("publisher_created_at").toLocalDateTime());
+                    publisher.setProfilePicture(rs.getBytes("profile_picture"));
                     System.out.println("PublisherDAO: Found approved publisher with email: " + email);
                     return publisher;
                 }
@@ -72,7 +71,6 @@ public class PublisherDAO {
         return null;
     }
 
-    // Fetch all pending publishers from publisher_approvals table
     public List<Publisher> getPendingPublishers() {
         List<Publisher> pendingPublishers = new ArrayList<>();
         String sql = "SELECT * FROM publisher_approvals";
@@ -99,7 +97,6 @@ public class PublisherDAO {
         return pendingPublishers;
     }
 
-    // Fetch a pending publisher by ID (for resume download and validation)
     public Publisher getPendingPublisherById(int id) {
         String sql = "SELECT * FROM publisher_approvals WHERE pa_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
@@ -128,9 +125,8 @@ public class PublisherDAO {
         return null;
     }
 
-    // Move a publisher from publisher_approvals to publishers
     public boolean moveToPublishers(int publisherId) {
-        String insertSql = "INSERT INTO publishers (publisher_first_name, publisher_last_name, publisher_email, publisher_password, publisher_resume, publisher_resume_filename, publisher_created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String insertSql = "INSERT INTO publishers (publisher_first_name, publisher_last_name, publisher_email, publisher_password, publisher_resume, publisher_resume_filename, publisher_created_at, profile_picture) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         String deleteSql = "DELETE FROM publisher_approvals WHERE pa_id = ?";
         Connection conn = null;
         PreparedStatement insertStmt = null;
@@ -138,16 +134,14 @@ public class PublisherDAO {
 
         try {
             conn = DatabaseUtil.getConnection();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Step 1: Fetch the publisher from publisher_approvals
             Publisher publisher = getPendingPublisherById(publisherId);
             if (publisher == null) {
                 System.err.println("PublisherDAO: No publisher found with ID " + publisherId + " in publisher_approvals");
                 return false;
             }
 
-            // Step 2: Log the publisher details for debugging
             System.out.println("PublisherDAO: Attempting to move publisher ID: " + publisherId +
                     ", First Name: " + publisher.getFirstName() +
                     ", Last Name: " + (publisher.getLastName() != null ? publisher.getLastName() : "NULL") +
@@ -157,7 +151,6 @@ public class PublisherDAO {
                     ", Resume Filename: " + (publisher.getResumeFilename() != null ? publisher.getResumeFilename() : "NULL") +
                     ", Created At: " + publisher.getCreatedAt());
 
-            // Step 3: Validate required fields (pa_first_name and pa_email are NOT NULL in publisher_approvals)
             if (publisher.getFirstName() == null || publisher.getFirstName().trim().isEmpty()) {
                 System.err.println("PublisherDAO: First name is missing for publisher ID " + publisherId);
                 return false;
@@ -171,51 +164,33 @@ public class PublisherDAO {
                 return false;
             }
 
-            // Step 4: Insert into publishers
-            try {
-                insertStmt = conn.prepareStatement(insertSql);
-                insertStmt.setString(1, publisher.getFirstName());
-                insertStmt.setString(2, publisher.getLastName());
-                insertStmt.setString(3, publisher.getEmail());
-                insertStmt.setString(4, publisher.getPassword());
-                insertStmt.setBytes(5, publisher.getResume());
-                insertStmt.setString(6, publisher.getResumeFilename());
-                insertStmt.setTimestamp(7, Timestamp.valueOf(publisher.getCreatedAt()));
-                int rowsInserted = insertStmt.executeUpdate();
-                if (rowsInserted != 1) {
-                    System.err.println("PublisherDAO: Failed to insert publisher ID " + publisherId + " into publishers table, rows affected: " + rowsInserted);
-                    conn.rollback();
-                    return false;
-                }
-                System.out.println("PublisherDAO: Successfully inserted publisher ID " + publisherId + " into publishers table");
-            } catch (SQLException e) {
-                System.err.println("PublisherDAO: SQL error during INSERT for publisher ID " + publisherId + ": " +
-                        e.getMessage() + ", SQLState: " + e.getSQLState() + ", ErrorCode: " + e.getErrorCode());
-                e.printStackTrace();
+            insertStmt = conn.prepareStatement(insertSql);
+            insertStmt.setString(1, publisher.getFirstName());
+            insertStmt.setString(2, publisher.getLastName());
+            insertStmt.setString(3, publisher.getEmail());
+            insertStmt.setString(4, publisher.getPassword());
+            insertStmt.setBytes(5, publisher.getResume());
+            insertStmt.setString(6, publisher.getResumeFilename());
+            insertStmt.setTimestamp(7, Timestamp.valueOf(publisher.getCreatedAt()));
+            insertStmt.setNull(8, java.sql.Types.BLOB); // profile_picture is null initially
+            int rowsInserted = insertStmt.executeUpdate();
+            if (rowsInserted != 1) {
+                System.err.println("PublisherDAO: Failed to insert publisher ID " + publisherId + " into publishers table, rows affected: " + rowsInserted);
                 conn.rollback();
                 return false;
             }
+            System.out.println("PublisherDAO: Successfully inserted publisher ID " + publisherId + " into publishers table");
 
-            // Step 5: Delete from publisher_approvals
-            try {
-                deleteStmt = conn.prepareStatement(deleteSql);
-                deleteStmt.setInt(1, publisherId);
-                int rowsDeleted = deleteStmt.executeUpdate();
-                if (rowsDeleted != 1) {
-                    System.err.println("PublisherDAO: Failed to delete publisher ID " + publisherId + " from publisher_approvals, rows affected: " + rowsDeleted);
-                    conn.rollback();
-                    return false;
-                }
-                System.out.println("PublisherDAO: Successfully deleted publisher ID " + publisherId + " from publisher_approvals");
-            } catch (SQLException e) {
-                System.err.println("PublisherDAO: SQL error during DELETE for publisher ID " + publisherId + ": " +
-                        e.getMessage() + ", SQLState: " + e.getSQLState() + ", ErrorCode: " + e.getErrorCode());
-                e.printStackTrace();
+            deleteStmt = conn.prepareStatement(deleteSql);
+            deleteStmt.setInt(1, publisherId);
+            int rowsDeleted = deleteStmt.executeUpdate();
+            if (rowsDeleted != 1) {
+                System.err.println("PublisherDAO: Failed to delete publisher ID " + publisherId + " from publisher_approvals, rows affected: " + rowsDeleted);
                 conn.rollback();
                 return false;
             }
+            System.out.println("PublisherDAO: Successfully deleted publisher ID " + publisherId + " from publisher_approvals");
 
-            // Commit transaction
             conn.commit();
             System.out.println("PublisherDAO: Successfully moved publisher ID " + publisherId + " to publishers");
             return true;
@@ -245,7 +220,6 @@ public class PublisherDAO {
         }
     }
 
-    // Public method to delete a publisher from publisher_approvals (for rejection)
     public boolean deletePendingPublisher(int publisherId) {
         String sql = "DELETE FROM publisher_approvals WHERE pa_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
@@ -256,6 +230,28 @@ public class PublisherDAO {
             return affectedRows > 0;
         } catch (SQLException e) {
             System.err.println("PublisherDAO: Error deleting pending publisher ID: " + publisherId + ": " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean updatePublisher(Publisher publisher) {
+        String sql = "UPDATE publishers SET publisher_first_name = ?, publisher_last_name = ?, publisher_email = ?, profile_picture = COALESCE(?, profile_picture) WHERE publisher_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, publisher.getFirstName());
+            pstmt.setString(2, publisher.getLastName());
+            pstmt.setString(3, publisher.getEmail());
+            if (publisher.getProfilePicture() != null) {
+                pstmt.setBytes(4, publisher.getProfilePicture());
+            } else {
+                pstmt.setNull(4, java.sql.Types.BLOB);
+            }
+            pstmt.setInt(5, publisher.getId());
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            System.err.println("PublisherDAO: Error updating publisher ID " + publisher.getId() + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }

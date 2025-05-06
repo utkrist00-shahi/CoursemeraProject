@@ -1,24 +1,32 @@
-
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.util.List, model.Courses, dao.CoursesDAO" %>
 <%
 // Prevent caching of the page
 response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 response.setHeader("Pragma", "no-cache");
 response.setDateHeader("Expires", 0);
 
-// Check if logout occurred
+// Check logout
 String loggedOut = request.getParameter("loggedOut");
 if ("true".equals(loggedOut)) {
     System.out.println("courses.jsp: Logout detected via query parameter, ensuring unauthenticated state");
     if (session != null) {
         session.invalidate();
     }
+    response.sendRedirect("index.jsp");
+    return;
 }
 
 // Determine authentication status
 String role = (String) session.getAttribute("role");
 String username = (String) session.getAttribute("username");
 boolean isAuthenticated = (role != null && username != null);
+boolean isPublisher = "PUBLISHER".equals(role);
+Integer publisherId = (Integer) session.getAttribute("publisherId");
+
+// Fetch recent courses
+CoursesDAO coursesDAO = new CoursesDAO();
+List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
 %>
 <!DOCTYPE html>
 <html>
@@ -59,7 +67,7 @@ boolean isAuthenticated = (role != null && username != null);
             padding: 0 24px;
         }
 
-        /* Header from index.jsp */
+        /* Header */
         header {
             background-color: #fff;
             padding: 20px 40px;
@@ -416,6 +424,31 @@ boolean isAuthenticated = (role != null && username != null);
             transform: translateY(-2px);
         }
 
+        .edit-btn, .delete-btn {
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            width: 48%;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .edit-btn {
+            background: #f1c40f;
+            color: #fff;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: #fff;
+        }
+
+        .edit-btn:hover, .delete-btn:hover {
+            transform: translateY(-2px);
+        }
+
         /* Testimonials */
         .testimonials {
             padding: 80px 0;
@@ -467,7 +500,7 @@ boolean isAuthenticated = (role != null && username != null);
             color: var(--light-text);
         }
 
-        /* Footer from index.jsp */
+        /* Footer */
         footer {
             background-color: #1a1a1a;
             color: #fff;
@@ -535,7 +568,7 @@ boolean isAuthenticated = (role != null && username != null);
     </style>
 </head>
 <body>
-    <!-- Header from index.jsp -->
+    <!-- Header -->
     <header>
         <div class="flex items-center">
             <img src="logo.png" alt="Coursemera Logo" class="logo">
@@ -560,7 +593,19 @@ boolean isAuthenticated = (role != null && username != null);
                         <i class="fas fa-user"></i>
                         <span><%= username %></span>
                     </a>
-                    <a href="${pageContext.request.contextPath}/logout" class="logout-button">logout</a>
+                    <a href="?loggedOut=true" class="logout-button">logout</a>
+            <%
+                } else if ("PUBLISHER".equals(role)) {
+                    System.out.println("courses.jsp: Publisher session detected, displaying authenticated navbar for PUBLISHER");
+            %>
+                    <a href="index.jsp" class="nav-home">Home</a>
+                    <a href="courses.jsp" class="nav-link active">courses</a>
+                    <a href="about.jsp" class="nav-link">about</a>
+                    <a href="${pageContext.request.contextPath}/publisher_dashboard" class="user-info">
+                        <i class="fas fa-user"></i>
+                        <span><%= username %></span>
+                    </a>
+                    <a href="?loggedOut=true" class="logout-button">logout</a>
             <%
                 } else if ("ADMIN".equals(role)) {
                     System.out.println("courses.jsp: Role ADMIN detected, redirecting to admin_panel");
@@ -577,7 +622,7 @@ boolean isAuthenticated = (role != null && username != null);
         </nav>
     </header>
 
-    <!-- Hero Section (Removed Join for Free) -->
+    <!-- Hero Section -->
     <section class="hero">
         <div class="container">
             <h1>Learn without limits</h1>
@@ -628,7 +673,7 @@ boolean isAuthenticated = (role != null && username != null);
         </div>
     </section>
 
-    <!-- Popular Courses (Added Enroll Now buttons) -->
+    <!-- Popular Courses -->
     <section class="courses-section">
         <div class="container">
             <div class="section-header">
@@ -685,7 +730,8 @@ boolean isAuthenticated = (role != null && username != null);
                     </div>
                 </div>
                 <div class="course-card">
-                   <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" alt="Business" class="course-image"> <div class="course-content">
+                    <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" alt="Business" class="course-image">
+                    <div class="course-content">
                         <div class="course-category">Business</div>
                         <h3 class="course-title">Business Fundamentals</h3>
                         <div class="course-instructor">Chris Haroun</div>
@@ -702,8 +748,7 @@ boolean isAuthenticated = (role != null && username != null);
             </div>
         </div>
     </section>
-
-    <!-- New Courses (Added Enroll Now buttons) -->
+    <!-- New & Noteworthy (Recently Added Courses) -->
     <section class="courses-section">
         <div class="container">
             <div class="section-header">
@@ -711,73 +756,53 @@ boolean isAuthenticated = (role != null && username != null);
                 <a href="#" class="view-all">View all →</a>
             </div>
             <div class="course-grid">
-                <div class="course-card">
-                    <img src="https://images.unsplash.com/photo-1593642632823-8f785ba67e45?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" alt="Python" class="course-image">
-                    <div class="course-content">
-                        <div class="course-category">Technology</div>
-                        <h3 class="course-title">Python for Data Science</h3>
-                        <div class="course-instructor">Jose Portilla</div>
-                        <div class="course-meta">
-                            <div class="course-price">$54.99</div>
-                            <div class="course-rating">
-                                <div class="stars">★★★★★</div>
-                                <div class="rating-count">(876)</div>
+                <% 
+                    if (recentCourses != null && !recentCourses.isEmpty()) {
+                        for (Courses course : recentCourses) {
+                            String imagePath = course.getImagePath();
+                            String fullImagePath = imagePath != null && !imagePath.isEmpty() ? request.getContextPath() + "/" + imagePath : "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"; // Fallback image
+                %>
+                    <div class="course-card">
+                        <img src="<%= fullImagePath %>" alt="<%= course.getTitle() != null ? course.getTitle() : "Course" %>" class="course-image">
+                        <div class="course-content">
+                            <div class="course-category"><%= course.getCategory() != null ? course.getCategory() : "Unknown" %></div>
+                            <h3 class="course-title"><%= course.getTitle() != null ? course.getTitle() : "No Title" %></h3>
+                            <div class="course-instructor"><%= course.getInstructor() != null ? course.getInstructor() : "Unknown Instructor" %></div>
+                            <div class="course-meta">
+                                <div class="course-price">$<%= String.format("%.2f", course.getPrice()) %></div>
+                                <div class="course-rating">
+                                    <div class="stars">★★★★★</div>
+                                    <div class="rating-count">(0)</div>
+                                </div>
                             </div>
+                            <% if (isPublisher && publisherId != null && course.getPublisherId() == publisherId) { %>
+                                <div style="display: flex; gap: 8px;">
+                                    <form action="${pageContext.request.contextPath}/CourseManagementServlet" method="post" style="display: inline; width: 48%;">
+                                        <input type="hidden" name="action" value="update">
+                                        <input type="hidden" name="courseId" value="<%= course.getId() %>">
+                                        <button type="submit" class="edit-btn">Edit</button>
+                                    </form>
+                                    <form action="${pageContext.request.contextPath}/CourseManagementServlet" method="post" style="display: inline; width: 48%;">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="courseId" value="<%= course.getId() %>">
+                                        <button type="submit" class="delete-btn">Delete</button>
+                                    </form>
+                                </div>
+                            <% } else { %>
+                                <button class="enroll-btn">Enroll Now</button>
+                            <% } %>
                         </div>
-                        <button class="enroll-btn">Enroll Now</button>
                     </div>
-                </div>
-                <div class="course-card">
-                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" alt="AI" class="course-image">
-                    <div class="course-content">
-                        <div class="course-category">Technology</div>
-                        <h3 class="course-title">AI for Everyone</h3>
-                        <div class="course-instructor">Andrew Ng</div>
-                        <div class="course-meta">
-                            <div class="course-price">$49.99</div>
-                            <div class="course-rating">
-                                <div class="stars">★★★★☆</div>
-                                <div class="rating-count">(1,024)</div>
-                            </div>
-                        </div>
-                        <button class="enroll-btn">Enroll Now</button>
-                    </div>
-                </div>
-                <div class="course-card">
-                    <img src="https://images.unsplash.com/photo-1542626991-cbc4e32524cc?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" alt="Photography" class="course-image">
-                    <div class="course-content">
-                        <div class="course-category">Arts</div>
-                        <h3 class="course-title">Photography Masterclass</h3>
-                        <div class="course-instructor">Annie Leibovitz</div>
-                        <div class="course-meta">
-                            <div class="course-price">$34.99</div>
-                            <div class="course-rating">
-                                <div class="stars">★★★★★</div>
-                                <div class="rating-count">(742)</div>
-                            </div>
-                        </div>
-                        <button class="enroll-btn">Enroll Now</button>
-                    </div>
-                </div>
-                <div class="course-card">
-                    <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" alt="Finance" class="course-image">
-                    <div class="course-content">
-                        <div class="course-category">Business</div>
-                        <h3 class="course-title">Personal Finance Planning</h3>
-                        <div class="course-instructor">Ramit Sethi</div>
-                        <div class="course-meta">
-                            <div class="course-price">$29.99</div>
-                            <div class="course-rating">
-                                <div class="stars">★★★★☆</div>
-                                <div class="rating-count">(1,156)</div>
-                            </div>
-                        </div>
-                        <button class="enroll-btn">Enroll Now</button>
-                    </div>
-                </div>
+                <% 
+                        }
+                    } else {
+                %>
+                    <p>No recently added courses available.</p>
+                <% } %>
             </div>
         </div>
     </section>
+    
 
     <!-- Testimonials -->
     <section class="testimonials">
@@ -819,7 +844,8 @@ boolean isAuthenticated = (role != null && username != null);
         </div>
     </section>
 
-    <!-- CTA (Removed Get Started) -->
+    
+    <!-- CTA -->
     <section class="hero" style="background: var(--primary-color); padding: 60px 0;">
         <div class="container" style="text-align: center;">
             <h1 style="color: white;">Start learning today</h1>
@@ -827,7 +853,7 @@ boolean isAuthenticated = (role != null && username != null);
         </div>
     </section>
 
-    <!-- Footer from index.jsp -->
+    <!-- Footer -->
     <footer>
         <div class="footer-sections">
             <div class="footer-section">
@@ -889,7 +915,7 @@ boolean isAuthenticated = (role != null && username != null);
         // Simple script to toggle mobile menu (would be expanded in production)
         document.querySelectorAll('.course-card').forEach(card => {
             card.addEventListener('click', function(e) {
-                if (!e.target.classList.contains('enroll-btn')) {
+                if (!e.target.classList.contains('enroll-btn') && !e.target.classList.contains('edit-btn') && !e.target.classList.contains('delete-btn')) {
                     console.log('Course clicked: ' + this.querySelector('.course-title').textContent);
                 }
             });
