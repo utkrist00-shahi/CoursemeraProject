@@ -2,13 +2,18 @@
 <%@ page import="java.util.List" %>
 <%@ page import="model.Publisher" %>
 <%
-// Session check 
-if (session == null || session.getAttribute("role") == null || !"ADMIN".equals(session.getAttribute("role"))) {
-    System.out.println("admin_panel.jsp: Unauthorized access, redirecting to login");
-    response.sendRedirect(request.getContextPath() + "/login");
+// Session check with try-catch to handle potential response commitment issues
+try {
+    if (session == null || session.getAttribute("role") == null || !"ADMIN".equals(session.getAttribute("role"))) {
+        System.out.println("admin_panel.jsp: Unauthorized access, redirecting to login");
+        response.sendRedirect(request.getContextPath() + "/login");
+        return;
+    }
+    System.out.println("admin_panel.jsp: Authorized access, username: " + session.getAttribute("username"));
+} catch (IllegalStateException e) {
+    System.err.println("admin_panel.jsp: Response already committed during redirect: " + e.getMessage());
     return;
 }
-System.out.println("admin_panel.jsp: Authorized access, username: " + session.getAttribute("username"));
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -189,6 +194,14 @@ System.out.println("admin_panel.jsp: Authorized access, username: " + session.ge
         table td .reject-btn:hover {
             background-color: #c0392b;
         }
+        table td .view-resume-btn {
+            background-color: #3498db;
+            color: #fff;
+            margin-right: 5px;
+        }
+        table td .view-resume-btn:hover {
+            background-color: #1e90ff;
+        }
         footer {
             background-color: #1a1a1a;
             color: #fff;
@@ -199,6 +212,69 @@ System.out.println("admin_panel.jsp: Authorized access, username: " + session.ge
             margin: 0;
             font-size: 14px;
             color: #ccc;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        .modal-content h3 {
+            margin: 0 0 15px;
+            color: #333;
+            font-size: 20px;
+        }
+        .modal-content p {
+            margin: 10px 0;
+            color: #666;
+        }
+        .modal-content object {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .modal-content .download-btn {
+            background-color: #8a2be2;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+        }
+        .modal-content .download-btn:hover {
+            background-color: #6a1ab6;
+        }
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+        }
+        .close:hover {
+            color: #555;
         }
     </style>
 </head>
@@ -239,7 +315,7 @@ System.out.println("admin_panel.jsp: Authorized access, username: " + session.ge
                 }
                 String error = (String) request.getAttribute("error");
                 if (error != null && !error.isEmpty()) {
-                    System.out.println("admin_panel.jsp: Displaying error message: " + error);
+                    System.err.println("admin_panel.jsp: Displaying error message: " + error);
             %>
                 <p class="error"><%= error %></p>
             <%
@@ -267,11 +343,11 @@ System.out.println("admin_panel.jsp: Authorized access, username: " + session.ge
                                 System.out.println("admin_panel.jsp: Rendering publisher - ID: " + publisher.getId() + ", Name: " + publisher.getFirstName() + " " + publisher.getLastName());
                         %>
                             <tr>
-                                <td><%= publisher.getFirstName() %> <%= publisher.getLastName() %></td>
-                                <td><%= publisher.getEmail() %></td>
+                                <td><%= publisher.getFirstName() != null ? publisher.getFirstName() : "" %> <%= publisher.getLastName() != null ? publisher.getLastName() : "" %></td>
+                                <td><%= publisher.getEmail() != null ? publisher.getEmail() : "N/A" %></td>
                                 <td>
-                                    <% if (publisher.getResumeFilename() != null) { %>
-                                        <a href="${pageContext.request.contextPath}/admin_download_resume?publisherId=<%= publisher.getId() %>"><%= publisher.getResumeFilename() %></a>
+                                    <% if (publisher.getResumeFilename() != null && publisher.getResume() != null) { %>
+                                        <button class="view-resume-btn" onclick="openModal('<%= publisher.getId() %>', '<%= publisher.getResumeFilename() %>')">View Resume</button>
                                     <% } else { %>
                                         No resume
                                     <% } %>
@@ -313,6 +389,19 @@ System.out.println("admin_panel.jsp: Authorized access, username: " + session.ge
         <p>© 2025 CourseMera. All rights reserved.</p>
     </footer>
 
+    <!-- Modal -->
+    <div id="resumeModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">×</span>
+            <h3>Resume Overview</h3>
+            <p id="modalFilename"></p>
+            <object id="pdfPreview" type="application/pdf" data="">
+                <p>PDF preview not supported by your browser. Please download the file to view it.</p>
+            </object>
+            <button class="download-btn" onclick="downloadResume()">Download</button>
+        </div>
+    </div>
+
     <script>
         function showSection(sectionId) {
             document.getElementById('publishers-section').style.display = sectionId === 'publishers' ? 'block' : 'none';
@@ -325,6 +414,58 @@ System.out.println("admin_panel.jsp: Authorized access, username: " + session.ge
                     btn.classList.add('active');
                 }
             });
+        }
+
+        function openModal(publisherId, filename) {
+            document.getElementById('modalFilename').innerText = filename;
+            const pdfPreview = document.getElementById('pdfPreview');
+            pdfPreview.setAttribute('data', '${pageContext.request.contextPath}/admin_download_resume?publisherId=' + publisherId + '&inline=true');
+            document.getElementById('resumeModal').style.display = 'block';
+            window.currentPublisherId = publisherId; // Store publisherId for download
+        }
+
+        function closeModal() {
+            document.getElementById('resumeModal').style.display = 'none';
+            const pdfPreview = document.getElementById('pdfPreview');
+            pdfPreview.setAttribute('data', ''); // Clear PDF to prevent caching issues
+        }
+
+        function downloadResume() {
+            if (window.currentPublisherId) {
+                // Create a form to submit the download request
+                const form = document.createElement('form');
+                form.method = 'GET';
+                form.action = '${pageContext.request.contextPath}/admin_download_resume';
+                form.target = '_blank'; // Open in new tab to handle download
+
+                const input1 = document.createElement('input');
+                input1.type = 'hidden';
+                input1.name = 'publisherId';
+                input1.value = window.currentPublisherId;
+
+                const input2 = document.createElement('input');
+                input2.type = 'hidden';
+                input2.name = 'inline';
+                input2.value = 'false'; // Force download
+
+                form.appendChild(input1);
+                form.appendChild(input2);
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+
+                closeModal(); // Close modal after initiating download
+            }
+        }
+
+        // Close modal if user clicks outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('resumeModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+                const pdfPreview = document.getElementById('pdfPreview');
+                pdfPreview.setAttribute('data', ''); // Clear PDF to prevent caching issues
+            }
         }
     </script>
 </body>

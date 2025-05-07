@@ -2,6 +2,7 @@ package dao;
 
 import model.Publisher;
 import util.DatabaseUtil;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
@@ -19,7 +20,9 @@ public class PublisherDAO {
             pstmt.setString(2, publisher.getLastName());
             pstmt.setString(3, publisher.getEmail());
             pstmt.setString(4, publisher.getPassword());
-            pstmt.setBytes(5, publisher.getResume());
+            byte[] resumeData = publisher.getResume();
+            System.out.println("PublisherDAO: Preparing to save resume of size: " + (resumeData != null ? resumeData.length : 0) + " bytes for email: " + publisher.getEmail());
+            pstmt.setBytes(5, resumeData);
             pstmt.setString(6, publisher.getResumeFilename());
             pstmt.setTimestamp(7, Timestamp.valueOf(publisher.getCreatedAt()));
             int affectedRows = pstmt.executeUpdate();
@@ -36,7 +39,10 @@ public class PublisherDAO {
                 return false;
             }
         } catch (SQLException e) {
-            System.err.println("PublisherDAO: Error saving pending publisher: " + e.getMessage());
+            System.err.println("PublisherDAO: Error saving pending publisher with email: " + publisher.getEmail() + 
+                               ", SQLState: " + e.getSQLState() + 
+                               ", ErrorCode: " + e.getErrorCode() + 
+                               ", Message: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -258,6 +264,16 @@ public class PublisherDAO {
     }
 
     public static byte[] convertInputStreamToByteArray(InputStream inputStream) throws IOException {
-        return inputStream.readAllBytes();
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        byte[] data = new byte[8192]; // Use a larger buffer to handle large files efficiently
+        int bytesRead;
+        System.out.println("PublisherDAO: Starting to convert InputStream to byte array");
+        while ((bytesRead = inputStream.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, bytesRead);
+        }
+        buffer.flush();
+        byte[] result = buffer.toByteArray();
+        System.out.println("PublisherDAO: Successfully converted InputStream to byte array, size: " + result.length + " bytes");
+        return result;
     }
 }

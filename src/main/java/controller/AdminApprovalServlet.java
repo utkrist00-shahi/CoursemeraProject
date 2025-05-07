@@ -8,7 +8,7 @@ import jakarta.servlet.annotation.*;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet({"/admin_panel", "/admin_download_resume"})
+@WebServlet("/admin_panel")
 public class AdminApprovalServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private PublisherDAO publisherDao;
@@ -29,46 +29,18 @@ public class AdminApprovalServlet extends HttpServlet {
         }
         System.out.println("AdminApprovalServlet: Authorized admin access (GET), username: " + session.getAttribute("username"));
 
-        String path = request.getServletPath();
-
-        if ("/admin_download_resume".equals(path)) {
-            // Handle resume download for pending publisher
-            String publisherIdParam = request.getParameter("publisherId");
-            int publisherId;
-            try {
-                publisherId = Integer.parseInt(publisherIdParam);
-            } catch (NumberFormatException e) {
-                System.err.println("AdminApprovalServlet: Invalid publisherId format for download: " + publisherIdParam);
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid publisher ID");
-                return;
-            }
-
-            Publisher publisher = publisherDao.getPendingPublisherById(publisherId);
-            if (publisher != null && publisher.getResume() != null) {
-                response.setContentType("application/pdf");
-                response.setHeader("Content-Disposition", "attachment; filename=\"" + publisher.getResumeFilename() + "\"");
-                response.setContentLength(publisher.getResume().length);
-                response.getOutputStream().write(publisher.getResume());
-                response.getOutputStream().flush();
-                System.out.println("AdminApprovalServlet: Successfully sent resume for publisher ID: " + publisherId);
-            } else {
-                System.err.println("AdminApprovalServlet: Resume not found for publisher ID: " + publisherId);
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Resume not found");
-            }
+        // Fetch all pending publishers from publisher_approvals
+        List<Publisher> pendingPublishers = publisherDao.getPendingPublishers();
+        System.out.println("AdminApprovalServlet: Forwarding " + pendingPublishers.size() + " pending publishers to admin_panel.jsp");
+        if (pendingPublishers.isEmpty()) {
+            System.out.println("AdminApprovalServlet: No pending publishers found to display");
         } else {
-            // Fetch all pending publishers from publisher_approvals
-            List<Publisher> pendingPublishers = publisherDao.getPendingPublishers();
-            System.out.println("AdminApprovalServlet: Forwarding " + pendingPublishers.size() + " pending publishers to admin_panel.jsp");
-            if (pendingPublishers.isEmpty()) {
-                System.out.println("AdminApprovalServlet: No pending publishers found to display");
-            } else {
-                for (Publisher p : pendingPublishers) {
-                    System.out.println("AdminApprovalServlet: Publisher - ID: " + p.getId() + ", Name: " + p.getFirstName() + " " + p.getLastName() + ", Email: " + p.getEmail());
-                }
+            for (Publisher p : pendingPublishers) {
+                System.out.println("AdminApprovalServlet: Publisher - ID: " + p.getId() + ", Name: " + p.getFirstName() + " " + p.getLastName() + ", Email: " + p.getEmail());
             }
-            request.setAttribute("pendingPublishers", pendingPublishers);
-            request.getRequestDispatcher("/admin_panel.jsp").forward(request, response);
         }
+        request.setAttribute("pendingPublishers", pendingPublishers);
+        request.getRequestDispatcher("/admin_panel.jsp").forward(request, response);
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
