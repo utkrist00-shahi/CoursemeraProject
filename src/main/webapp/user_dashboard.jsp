@@ -51,6 +51,19 @@ try {
     <title>User Dashboard - Coursemera</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #4a6bff;
+            --secondary-color: #ff6b6b;
+            --accent-color: #6bceff;
+            --dark-color: #2b2d42;
+            --light-color: #f8f9fa;
+            --text-color: #2d3436;
+            --light-text: #636e72;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -309,7 +322,7 @@ try {
             align-items: center;
             margin-bottom: 20px;
             border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
+            padding-bottom: 20px;
         }
         .course-item img {
             width: 100px;
@@ -325,6 +338,92 @@ try {
         .course-item p {
             margin: 5px 0;
             color: #666;
+        }
+        .course-item .button-container {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .view-book-btn {
+            padding: 10px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+            text-align: center;
+            box-sizing: border-box;
+            background-color: #3498db;
+            color: #fff;
+            width: 120px;
+            min-height: 40px;
+        }
+        .view-book-btn:hover {
+            transform: translateY(-2px);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        .modal-content h3 {
+            margin: 0 0 15px;
+            color: #333;
+            font-size: 20px;
+        }
+        .modal-content p {
+            margin: 10px 0;
+            color: #666;
+        }
+        .modal-content object {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .modal-content .download-btn {
+            background-color: #8a2be2;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+        }
+        .modal-content .download-btn:hover {
+            background-color: #6a1ab6;
+        }
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+        }
+        .close:hover {
+            color: #555;
         }
     </style>
 </head>
@@ -439,6 +538,13 @@ try {
                                         <h4><%= (course.getTitle() != null ? course.getTitle() : "Untitled Course") %></h4>
                                         <p>Instructor: <%= (course.getInstructor() != null ? course.getInstructor() : "Unknown") %></p>
                                         <p>Category: <%= (course.getCategory() != null ? course.getCategory() : "N/A") %></p>
+                                        <div class="button-container">
+                                            <% if (course.getBookPdfFilename() != null) { %>
+                                                <button class="view-book-btn" onclick="openModal('<%= course.getId() %>', '<%= course.getBookPdfFilename() %>', '<%= course.getTitle() %>')">View Book</button>
+                                            <% } else { %>
+                                                <p>No book available</p>
+                                            <% } %>
+                                        </div>
                                     </div>
                                 </div>
                             <% } %>
@@ -481,6 +587,19 @@ try {
         </div>
     </div>
 
+    <!-- Modal -->
+    <div id="bookModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">×</span>
+            <h3>Book Overview</h3>
+            <p id="modalFilename"></p>
+            <object id="pdfPreview" type="application/pdf" data="">
+                <p>PDF preview not supported by your browser. Please download the file to view it.</p>
+            </object>
+            <button class="download-btn" onclick="downloadBook()">Download</button>
+        </div>
+    </div>
+
     <script>
         document.querySelectorAll('.sidebar-nav a').forEach(link => {
             link.addEventListener('click', function(e) {
@@ -492,6 +611,96 @@ try {
                 document.getElementById(tabId).classList.add('active');
             });
         });
+
+        function openModal(courseId, filename, title) {
+            try {
+                if (!courseId || courseId === 'null' || courseId === '' || isNaN(Number(courseId))) {
+                    console.error('Invalid courseId passed to openModal:', courseId);
+                    alert('Error: Invalid course ID (' + courseId + '). Cannot open PDF.');
+                    return;
+                }
+                
+                const modalFilename = document.getElementById('modalFilename');
+                const pdfPreview = document.getElementById('pdfPreview');
+                const bookModal = document.getElementById('bookModal');
+
+                if (!modalFilename || !pdfPreview || !bookModal) {
+                    console.error('Modal elements not found:', { modalFilename, pdfPreview, bookModal });
+                    alert('Error: PDF modal elements not found. Check the console for details.');
+                    return;
+                }
+
+                modalFilename.innerText = title + " Book (" + filename + ")";
+                pdfPreview.setAttribute('data', '${pageContext.request.contextPath}/user_download_book?courseId=' + courseId + '&inline=true');
+                bookModal.style.display = 'block';
+                window.currentCourseId = courseId; // Store courseId for download
+            } catch (error) {
+                console.error('Error in openModal for courseId ' + courseId + ':', error);
+                alert('An error occurred while opening the PDF modal.');
+            }
+        }
+
+        function closeModal() {
+            try {
+                const bookModal = document.getElementById('bookModal');
+                const pdfPreview = document.getElementById('pdfPreview');
+
+                if (!bookModal || !pdfPreview) {
+                    console.error('Modal elements not found:', { bookModal, pdfPreview });
+                    alert('Error: PDF modal elements not found. Check the console for details.');
+                    return;
+                }
+
+                bookModal.style.display = 'none';
+                pdfPreview.setAttribute('data', ''); // Clear PDF to prevent caching issues
+            } catch (error) {
+                console.error('Error in closeModal:', error);
+                alert('An error occurred while closing the PDF modal.');
+            }
+        }
+
+        function downloadBook() {
+            try {
+                if (!window.currentCourseId) {
+                    console.error('No courseId set for downloadBook');
+                    alert('Error: No course selected for download.');
+                    return;
+                }
+
+                const form = document.createElement('form');
+                form.method = 'GET';
+                form.action = '${pageContext.request.contextPath}/user_download_book';
+                form.target = '_blank';
+
+                const input1 = document.createElement('input');
+                input1.type = 'hidden';
+                input1.name = 'courseId';
+                input1.value = window.currentCourseId;
+
+                const input2 = document.createElement('input');
+                input2.type = 'hidden';
+                input2.name = 'inline';
+                input2.value = 'false';
+
+                form.appendChild(input1);
+                form.appendChild(input2);
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+
+                closeModal();
+            } catch (error) {
+                console.error('Error in downloadBook:', error);
+                alert('An error occurred while downloading the PDF.');
+            }
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('bookModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
     </script>
 </body>
 </html>

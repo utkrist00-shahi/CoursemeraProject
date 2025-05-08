@@ -23,8 +23,12 @@ String email = (String) session.getAttribute("email");
 String role = (String) session.getAttribute("role");
 Integer publisherId = (Integer) session.getAttribute("publisherId");
 
+// Debug session attributes
+System.out.println("publisher_dashboard.jsp: role=" + role + ", publisherId=" + publisherId + ", email=" + email + ", sessionId=" + (session != null ? session.getId() : "null"));
+
 // Redirect if not a publisher
 if (!"PUBLISHER".equals(role) || publisherId == null) {
+    System.out.println("publisher_dashboard.jsp: Unauthorized access, redirecting to publisher_login.jsp");
     response.sendRedirect("publisher_login.jsp");
     return;
 }
@@ -41,12 +45,6 @@ if (publisherId != null) {
 // Fetch publisher details for profile
 PublisherDAO publisherDAO = new PublisherDAO();
 Publisher publisher = publisherDAO.getPublisherByEmail(email);
-
-// Convert profile picture to Base64 for display
-String profilePictureBase64 = null;
-if (publisher != null && publisher.getProfilePicture() != null) {
-    profilePictureBase64 = java.util.Base64.getEncoder().encodeToString(publisher.getProfilePicture());
-}
 
 // Handle messages from session
 String message = (String) session.getAttribute("message");
@@ -326,8 +324,8 @@ if (error != null) {
             font-size: 14px;
         }
 
-        .edit-btn, .delete-btn, .save-btn, .cancel-btn, .upload-btn {
-            padding: 10px 15px;
+        .edit-btn, .delete-btn, .save-btn, .cancel-btn, .upload-btn, .view-pdf-btn {
+            padding: 10px;
             border-radius: var(--border-radius);
             font-weight: 600;
             border: none;
@@ -335,8 +333,9 @@ if (error != null) {
             transition: var(--transition);
             font-size: 14px;
             text-align: center;
-            width: 100%;
             box-sizing: border-box;
+            min-height: 40px;
+            width: 100%;
         }
 
         .button-container {
@@ -345,12 +344,6 @@ if (error != null) {
             align-items: center;
             gap: 10px;
             margin-top: 10px;
-        }
-
-        .edit-btn, .delete-btn {
-            flex: 1;
-            height: 40px;
-            line-height: 20px;
         }
 
         .edit-btn {
@@ -366,16 +359,19 @@ if (error != null) {
         .save-btn, .upload-btn {
             background: var(--primary-color);
             color: white;
-            width: 48%;
         }
 
         .cancel-btn {
             background: #ccc;
             color: black;
-            width: 48%;
         }
 
-        .edit-btn:hover, .delete-btn:hover, .save-btn:hover, .cancel-btn:hover, .upload-btn:hover {
+        .view-pdf-btn {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        .edit-btn:hover, .delete-btn:hover, .save-btn:hover, .cancel-btn:hover, .upload-btn:hover, .view-pdf-btn:hover {
             transform: translateY(-2px);
         }
 
@@ -391,6 +387,69 @@ if (error != null) {
             font-size: 14px;
             text-align: center;
             margin: 10px 0;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        .modal-content h3 {
+            margin: 0 0 15px;
+            color: #333;
+            font-size: 20px;
+        }
+        .modal-content p {
+            margin: 10px 0;
+            color: #666;
+        }
+        .modal-content object {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .modal-content .download-btn {
+            background-color: #8a2be2;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+        }
+        .modal-content .download-btn:hover {
+            background-color: #6a1ab6;
+        }
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+        }
+        .close:hover {
+            color: #555;
         }
 
         footer {
@@ -500,6 +559,8 @@ if (error != null) {
                         <input type="number" id="price" name="price" step="0.01" min="0" required>
                         <label for="image">Image:</label>
                         <input type="file" id="image" name="image" accept="image/*" required>
+                        <label for="bookPdf">Book PDF (optional):</label>
+                        <input type="file" id="bookPdf" name="bookPdf" accept="application/pdf">
                         <div style="display: flex; gap: 8px;">
                             <button type="submit" class="upload-btn">Upload</button>
                             <button type="reset" class="cancel-btn">Reset</button>
@@ -528,12 +589,13 @@ if (error != null) {
                                     Integer courseId = course.getId();
                                     if (courseId != null && courseId > 0) {
                                         String courseIdStr = String.valueOf(courseId);
-                                        String imagePath = course.getImagePath();
-                                        String fullImagePath = imagePath != null && !imagePath.isEmpty() ? request.getContextPath() + "/" + imagePath : "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+                                        String imagePath = course.getImagePath() != null && !course.getImagePath().isEmpty() ? 
+                                            request.getContextPath() + "/" + course.getImagePath() : 
+                                            "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
                     %>
                         <div class="course-card" id="course-<%= courseIdStr %>">
                             <div class="course-display">
-                                <img src="<%= fullImagePath %>" alt="<%= course.getTitle() != null ? course.getTitle() : "Course" %>" class="course-image">
+                                <img src="<%= imagePath %>" alt="<%= course.getTitle() != null ? course.getTitle() : "Course" %>" class="course-image">
                                 <div class="course-content">
                                     <div class="course-category"><%= course.getCategory() != null ? course.getCategory() : "No Category" %></div>
                                     <h3 class="course-title"><%= course.getTitle() != null ? course.getTitle() : "No Title" %></h3>
@@ -545,9 +607,13 @@ if (error != null) {
                                             <div class="rating-count">(0)</div>
                                         </div>
                                     </div>
+                                    <p><strong>Book PDF:</strong> <%= course.getBookPdfFilename() != null ? course.getBookPdfFilename() : "Not uploaded" %></p>
+                                    <% if (course.getBookPdfFilename() != null && !course.getBookPdfFilename().isEmpty()) { %>
+                                        <button class="view-pdf-btn" onclick="openModal('<%= courseIdStr %>', '<%= course.getBookPdfFilename() %>')">View PDF</button>
+                                    <% } %>
                                     <div class="button-container">
                                         <button class="edit-btn" onclick="toggleEditForm('<%= courseIdStr %>')">Edit</button>
-                                        <form action="${pageContext.request.contextPath}/CourseManagementServlet" method="post" style="flex: 1;">
+                                        <form action="${pageContext.request.contextPath}/CourseManagementServlet" method="post" style="width: 100%;">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="courseId" value="<%= courseIdStr %>">
                                             <button type="submit" class="delete-btn">Delete</button>
@@ -569,8 +635,15 @@ if (error != null) {
                                     <input type="number" id="price-<%= courseIdStr %>" name="price" step="0.01" min="0" value="<%= String.format("%.2f", course.getPrice()) %>" required>
                                     <label for="image-<%= courseIdStr %>">Image (optional):</label>
                                     <input type="file" id="image-<%= courseIdStr %>" name="image" accept="image/*">
-                                    <% if (imagePath != null && !imagePath.isEmpty()) { %>
-                                        <p>Current Image: <img src="<%= request.getContextPath() + "/" + imagePath %>" alt="Course Image"></p>
+                                    <% if (course.getImagePath() != null && !course.getImagePath().isEmpty()) { %>
+                                        <p>Current Image: <img src="<%= request.getContextPath() + "/" + course.getImagePath() %>" alt="Course Image"></p>
+                                    <% } %>
+                                    <label for="bookPdf-<%= courseIdStr %>">Book PDF (optional):</label>
+                                    <input type="file" id="bookPdf-<%= courseIdStr %>" name="bookPdf" accept="application/pdf">
+                                    <% if (course.getBookPdfFilename() != null && !course.getBookPdfFilename().isEmpty()) { %>
+                                        <p>Current Book PDF: <%= course.getBookPdfFilename() %></p>
+                                    <% } else { %>
+                                        <p>Current Book PDF: Not uploaded</p>
                                     <% } %>
                                     <div style="display: flex; gap: 8px;">
                                         <button type="submit" class="save-btn">Save</button>
@@ -608,8 +681,8 @@ if (error != null) {
                 <% } %>
                 <div class="profile-form">
                     <div class="profile-pic-container">
-                        <% if (profilePictureBase64 != null) { %>
-                            <img src="data:image/jpeg;base64,<%= profilePictureBase64 %>" alt="Profile Picture">
+                        <% if (publisher != null && publisher.getProfilePicture() != null) { %>
+                            <img src="data:image/jpeg;base64,<%= java.util.Base64.getEncoder().encodeToString(publisher.getProfilePicture()) %>" alt="Profile Picture">
                         <% } else { %>
                             <div class="no-pic">No Image</div>
                         <% } %>
@@ -639,6 +712,19 @@ if (error != null) {
                 </div>
             </div>
         </section>
+    </div>
+
+    <!-- PDF Modal -->
+    <div id="pdfModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">×</span>
+            <h3>Course PDF Overview</h3>
+            <p id="modalFilename"></p>
+            <object id="pdfPreview" type="application/pdf" data="">
+                <p>PDF preview not supported by your browser. Please download the file to view it.</p>
+            </object>
+            <button class="download-btn" onclick="downloadPDF()">Download</button>
+        </div>
     </div>
 
     <footer>
@@ -724,6 +810,7 @@ if (error != null) {
                 const category = form.querySelector('input[name="category"]').value.trim();
                 const instructor = form.querySelector('input[name="instructor"]').value.trim();
                 const price = parseFloat(form.querySelector('input[name="price"]').value);
+                const bookPdf = form.querySelector('input[name="bookPdf"]').files[0];
 
                 if (title === '') {
                     alert('Title is required.');
@@ -741,6 +828,10 @@ if (error != null) {
                     alert('Price must be a non-negative number.');
                     return false;
                 }
+                if (bookPdf && bookPdf.size > 10 * 1024 * 1024) { // 10MB limit
+                    alert('Book PDF must be less than 10MB.');
+                    return false;
+                }
                 return true;
             } catch (error) {
                 console.error('Error in validateForm:', error);
@@ -756,6 +847,7 @@ if (error != null) {
                 const instructor = form.querySelector('input[name="instructor"]').value.trim();
                 const price = parseFloat(form.querySelector('input[name="price"]').value);
                 const image = form.querySelector('input[name="image"]').files.length;
+                const bookPdf = form.querySelector('input[name="bookPdf"]').files[0];
 
                 if (title === '') {
                     alert('Title is required.');
@@ -775,6 +867,10 @@ if (error != null) {
                 }
                 if (image === 0) {
                     alert('An image is required for new courses.');
+                    return false;
+                }
+                if (bookPdf && bookPdf.size > 10 * 1024 * 1024) { // 10MB limit
+                    alert('Book PDF must be less than 10MB.');
                     return false;
                 }
                 return true;
@@ -813,6 +909,103 @@ if (error != null) {
                 console.error('Error in validateProfileForm:', error);
                 alert('An error occurred while validating the profile form.');
                 return false;
+            }
+        }
+
+        function openModal(courseId, filename) {
+            try {
+                if (!courseId || courseId === 'null' || courseId === '' || isNaN(Number(courseId))) {
+                    console.error('Invalid courseId passed to openModal:', courseId);
+                    alert('Error: Invalid course ID (' + courseId + '). Cannot open PDF.');
+                    return;
+                }
+                
+                const modalFilename = document.getElementById('modalFilename');
+                const pdfPreview = document.getElementById('pdfPreview');
+                const pdfModal = document.getElementById('pdfModal');
+
+                if (!modalFilename || !pdfPreview || !pdfModal) {
+                    console.error('Modal elements not found:', { modalFilename, pdfPreview, pdfModal });
+                    alert('Error: PDF modal elements not found. Check the console for details.');
+                    return;
+                }
+
+                modalFilename.innerText = filename;
+                pdfPreview.setAttribute('data', '${pageContext.request.contextPath}/CourseManagementServlet?action=downloadPdf&courseId=' + courseId + '&inline=true');
+                pdfModal.style.display = 'block';
+                window.currentCourseId = courseId; // Store courseId for download
+            } catch (error) {
+                console.error('Error in openModal for courseId ' + courseId + ':', error);
+                alert('An error occurred while opening the PDF modal.');
+            }
+        }
+
+        function closeModal() {
+            try {
+                const pdfModal = document.getElementById('pdfModal');
+                const pdfPreview = document.getElementById('pdfPreview');
+
+                if (!pdfModal || !pdfPreview) {
+                    console.error('Modal elements not found:', { pdfModal, pdfPreview });
+                    alert('Error: PDF modal elements not found. Check the console for details.');
+                    return;
+                }
+
+                pdfModal.style.display = 'none';
+                pdfPreview.setAttribute('data', ''); // Clear PDF to prevent caching issues
+            } catch (error) {
+                console.error('Error in closeModal:', error);
+                alert('An error occurred while closing the PDF modal.');
+            }
+        }
+
+        function downloadPDF() {
+            try {
+                if (!window.currentCourseId) {
+                    console.error('No courseId set for downloadPDF');
+                    alert('Error: No course selected for download.');
+                    return;
+                }
+
+                const form = document.createElement('form');
+                form.method = 'GET';
+                form.action = '${pageContext.request.contextPath}/CourseManagementServlet';
+                form.target = '_blank'; // Open in new tab to handle download
+
+                const input1 = document.createElement('input');
+                input1.type = 'hidden';
+                input1.name = 'action';
+                input1.value = 'downloadPdf';
+
+                const input2 = document.createElement('input');
+                input2.type = 'hidden';
+                input2.name = 'courseId';
+                input2.value = window.currentCourseId;
+
+                const input3 = document.createElement('input');
+                input3.type = 'hidden';
+                input3.name = 'inline';
+                input3.value = 'false'; // Force download
+
+                form.appendChild(input1);
+                form.appendChild(input2);
+                form.appendChild(input3);
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+
+                closeModal(); // Close modal after initiating download
+            } catch (error) {
+                console.error('Error in downloadPDF:', error);
+                alert('An error occurred while downloading the PDF.');
+            }
+        }
+
+        // Close modal if user clicks outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('pdfModal');
+            if (event.target == modal) {
+                closeModal();
             }
         }
     </script>

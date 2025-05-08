@@ -12,21 +12,29 @@ import java.util.List;
 public class CoursesDAO {
 
     public boolean createCourse(Courses course) {
-        String sql = "INSERT INTO courses (title, category, instructor, price, image_path, publisher_id) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO courses (title, category, instructor, price, image_path, publisher_id, book_pdf_filename) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, course.getTitle());
             stmt.setString(2, course.getCategory());
             stmt.setString(3, course.getInstructor());
             stmt.setDouble(4, course.getPrice());
             stmt.setString(5, course.getImagePath());
             stmt.setInt(6, course.getPublisherId());
+            stmt.setString(7, course.getBookPdfFilename());
             int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
+            if (rowsAffected > 0) {
+                ResultSet rs = stmt.getGeneratedKeys();
+                if (rs.next()) {
+                    course.setId(rs.getInt(1));
+                }
+                return true;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
+        return false;
     }
 
     public List<Courses> getCoursesByPublisher(int publisherId) {
@@ -51,6 +59,7 @@ public class CoursesDAO {
                 course.setImagePath(rs.getString("image_path"));
                 course.setPublisherId(rs.getInt("publisher_id"));
                 course.setCreatedAt(rs.getString("created_at"));
+                course.setBookPdfFilename(rs.getString("book_pdf_filename"));
                 courses.add(course);
                 System.out.println("Retrieved course: ID=" + courseId + ", Title=" + course.getTitle());
             }
@@ -78,6 +87,7 @@ public class CoursesDAO {
                 course.setImagePath(rs.getString("image_path"));
                 course.setPublisherId(rs.getInt("publisher_id"));
                 course.setCreatedAt(rs.getString("created_at"));
+                course.setBookPdfFilename(rs.getString("book_pdf_filename"));
                 return course;
             }
         } catch (SQLException e) {
@@ -86,8 +96,33 @@ public class CoursesDAO {
         return null;
     }
 
+    public Courses getCourseById(int courseId) {
+        String sql = "SELECT * FROM courses WHERE id = ?";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, courseId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                Courses course = new Courses();
+                course.setId(rs.getInt("id"));
+                course.setTitle(rs.getString("title"));
+                course.setCategory(rs.getString("category"));
+                course.setInstructor(rs.getString("instructor"));
+                course.setPrice(rs.getDouble("price"));
+                course.setImagePath(rs.getString("image_path"));
+                course.setPublisherId(rs.getInt("publisher_id"));
+                course.setCreatedAt(rs.getString("created_at"));
+                course.setBookPdfFilename(rs.getString("book_pdf_filename"));
+                return course;
+            }
+        } catch (SQLException e) {
+            System.err.println("CoursesDAO: Error fetching course by ID " + courseId + ": " + e.getMessage());
+        }
+        return null;
+    }
+
     public boolean updateCourse(Courses course) {
-        String sql = "UPDATE courses SET title = ?, category = ?, instructor = ?, price = ?, image_path = ? WHERE id = ? AND publisher_id = ?";
+        String sql = "UPDATE courses SET title = ?, category = ?, instructor = ?, price = ?, image_path = ?, book_pdf_filename = ? WHERE id = ? AND publisher_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, course.getTitle());
@@ -95,8 +130,9 @@ public class CoursesDAO {
             stmt.setString(3, course.getInstructor());
             stmt.setDouble(4, course.getPrice());
             stmt.setString(5, course.getImagePath());
-            stmt.setInt(6, course.getId());
-            stmt.setInt(7, course.getPublisherId());
+            stmt.setString(6, course.getBookPdfFilename());
+            stmt.setInt(7, course.getId());
+            stmt.setInt(8, course.getPublisherId());
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
@@ -135,36 +171,13 @@ public class CoursesDAO {
                 course.setImagePath(rs.getString("image_path"));
                 course.setPublisherId(rs.getInt("publisher_id"));
                 course.setCreatedAt(rs.getString("created_at"));
+                course.setBookPdfFilename(rs.getString("book_pdf_filename"));
                 courses.add(course);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return courses;
-    }
-
-    public Courses getCourseById(int courseId) {
-        String sql = "SELECT * FROM courses WHERE id = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, courseId);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                Courses course = new Courses();
-                course.setId(rs.getInt("id"));
-                course.setTitle(rs.getString("title"));
-                course.setCategory(rs.getString("category"));
-                course.setInstructor(rs.getString("instructor"));
-                course.setPrice(rs.getDouble("price"));
-                course.setImagePath(rs.getString("image_path"));
-                course.setPublisherId(rs.getInt("publisher_id"));
-                course.setCreatedAt(rs.getString("created_at"));
-                return course;
-            }
-        } catch (SQLException e) {
-            System.err.println("CoursesDAO: Error fetching course by ID " + courseId + ": " + e.getMessage());
-        }
-        return null;
     }
 
     public List<Courses> getEnrolledCourses(int userId) {
@@ -184,6 +197,7 @@ public class CoursesDAO {
                 course.setImagePath(rs.getString("image_path"));
                 course.setPublisherId(rs.getInt("publisher_id"));
                 course.setCreatedAt(rs.getString("created_at"));
+                course.setBookPdfFilename(rs.getString("book_pdf_filename"));
                 enrolledCourses.add(course);
             }
         } catch (SQLException e) {

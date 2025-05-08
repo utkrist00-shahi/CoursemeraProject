@@ -8,21 +8,8 @@ public class Courses {
     private double price;
     private String imagePath;
     private int publisherId;
+    private String bookPdfFilename;
     private String createdAt;
-
-    // Constructors
-    public Courses() {}
-
-    public Courses(int id, String title, String category, String instructor, double price, String imagePath, int publisherId, String createdAt) {
-        this.id = id;
-        this.title = title;
-        this.category = category;
-        this.instructor = instructor;
-        this.price = price;
-        this.imagePath = imagePath;
-        this.publisherId = publisherId;
-        this.createdAt = createdAt;
-    }
 
     // Getters and Setters
     public int getId() {
@@ -79,6 +66,14 @@ public class Courses {
 
     public void setPublisherId(int publisherId) {
         this.publisherId = publisherId;
+    }
+
+    public String getBookPdfFilename() {
+        return bookPdfFilename;
+    }
+
+    public void setBookPdfFilename(String bookPdfFilename) {
+        this.bookPdfFilename = bookPdfFilename;
     }
 
     public String getCreatedAt() {

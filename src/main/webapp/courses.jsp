@@ -751,10 +751,14 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
                     if (recentCourses != null && !recentCourses.isEmpty()) {
                         for (Courses course : recentCourses) {
                             String imagePath = course.getImagePath();
-                            String fullImagePath = imagePath != null && !imagePath.isEmpty() ? request.getContextPath() + "/" + imagePath : "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+                            String imageUrl = (imagePath != null && !imagePath.trim().isEmpty()) ? 
+                                request.getContextPath() + "/" + imagePath : 
+                                "https://via.placeholder.com/160?text=No+Image";
+                            System.out.println("courses.jsp: Rendering course " + course.getId() + ", imagePath: " + imagePath + ", imageUrl: " + imageUrl);
                 %>
                     <div class="course-card">
-                        <img src="<%= fullImagePath %>" alt="<%= course.getTitle() != null ? course.getTitle() : "Course" %>" class="course-image">
+                        <img src="<%= imageUrl %>" alt="<%= course.getTitle() != null ? course.getTitle() : "Course" %>" class="course-image" 
+                             onerror="this.src='https://via.placeholder.com/160?text=Image+Error'; this.onerror=null; console.log('Image load failed for course ID <%= course.getId() %>: ' + this.src);">
                         <div class="course-content">
                             <div class="course-category"><%= course.getCategory() != null ? course.getCategory() : "Unknown" %></div>
                             <h3 class="course-title"><%= course.getTitle() != null ? course.getTitle() : "No Title" %></h3>
