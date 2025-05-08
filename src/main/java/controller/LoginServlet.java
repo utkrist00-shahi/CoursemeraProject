@@ -75,8 +75,8 @@ public class LoginServlet extends HttpServlet {
                 System.out.println("LoginServlet: User is admin, redirecting to admin_panel.jsp");
                 response.sendRedirect(request.getContextPath() + "/admin_panel");
             } else {
-                System.out.println("LoginServlet: User is not admin, redirecting to index.jsp");
-                response.sendRedirect(request.getContextPath() + "/index.jsp");
+                System.out.println("LoginServlet: User is not admin, redirecting to user_dashboard");
+                response.sendRedirect(request.getContextPath() + "/user_dashboard");
             }
         } else {
             System.out.println("LoginServlet: Invalid username or password for user: " + username);

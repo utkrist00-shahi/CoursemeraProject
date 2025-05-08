@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.List, model.Courses, dao.CoursesDAO" %>
 <%
-// Prevent caching of the page
+// Prevent caching
 response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 response.setHeader("Pragma", "no-cache");
 response.setDateHeader("Expires", 0);
@@ -67,7 +67,6 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
             padding: 0 24px;
         }
 
-        /* Header */
         header {
             background-color: #fff;
             padding: 20px 40px;
@@ -187,7 +186,6 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
             height: 80px;
         }
 
-        /* Hero Section */
         .hero {
             padding: 80px 0;
             background: linear-gradient(135deg, #f6f7ff 0%, #f0f4ff 100%);
@@ -246,7 +244,6 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
             transform: translateY(-2px);
         }
 
-        /* Categories */
         .categories {
             padding: 60px 0;
         }
@@ -309,7 +306,6 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
             color: var(--light-text);
         }
 
-        /* Courses */
         .courses-section {
             padding: 60px 0;
             background: #f8fafc;
@@ -417,6 +413,8 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
             width: 100%;
             text-align: center;
             transition: var(--transition);
+            display: inline-block;
+            text-decoration: none;
         }
 
         .enroll-btn:hover {
@@ -449,7 +447,6 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
             transform: translateY(-2px);
         }
 
-        /* Testimonials */
         .testimonials {
             padding: 80px 0;
             background: #f8fafc;
@@ -500,7 +497,6 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
             color: var(--light-text);
         }
 
-        /* Footer */
         footer {
             background-color: #1a1a1a;
             color: #fff;
@@ -547,7 +543,6 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
             text-align: center;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             header {
                 flex-direction: column;
@@ -568,7 +563,6 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header>
         <div class="flex items-center">
             <img src="logo.png" alt="Coursemera Logo" class="logo">
@@ -622,7 +616,6 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
         </nav>
     </header>
 
-    <!-- Hero Section -->
     <section class="hero">
         <div class="container">
             <h1>Learn without limits</h1>
@@ -633,7 +626,6 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
         </div>
     </section>
 
-    <!-- Categories -->
     <section class="categories">
         <div class="container">
             <h2 class="section-title">Browse by category</h2>
@@ -673,7 +665,6 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
         </div>
     </section>
 
-    <!-- Popular Courses -->
     <section class="courses-section">
         <div class="container">
             <div class="section-header">
@@ -748,7 +739,7 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
             </div>
         </div>
     </section>
-    <!-- New & Noteworthy (Recently Added Courses) -->
+
     <section class="courses-section">
         <div class="container">
             <div class="section-header">
@@ -760,7 +751,7 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
                     if (recentCourses != null && !recentCourses.isEmpty()) {
                         for (Courses course : recentCourses) {
                             String imagePath = course.getImagePath();
-                            String fullImagePath = imagePath != null && !imagePath.isEmpty() ? request.getContextPath() + "/" + imagePath : "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"; // Fallback image
+                            String fullImagePath = imagePath != null && !imagePath.isEmpty() ? request.getContextPath() + "/" + imagePath : "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
                 %>
                     <div class="course-card">
                         <img src="<%= fullImagePath %>" alt="<%= course.getTitle() != null ? course.getTitle() : "Course" %>" class="course-image">
@@ -789,7 +780,7 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
                                     </form>
                                 </div>
                             <% } else { %>
-                                <button class="enroll-btn">Enroll Now</button>
+                                <a href="${pageContext.request.contextPath}/payment?courseId=<%= course.getId() %>" class="enroll-btn">Enroll Now</a>
                             <% } %>
                         </div>
                     </div>
@@ -802,9 +793,7 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
             </div>
         </div>
     </section>
-    
 
-    <!-- Testimonials -->
     <section class="testimonials">
         <div class="container">
             <h2 class="section-title">What our learners say</h2>
@@ -844,8 +833,6 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
         </div>
     </section>
 
-    
-    <!-- CTA -->
     <section class="hero" style="background: var(--primary-color); padding: 60px 0;">
         <div class="container" style="text-align: center;">
             <h1 style="color: white;">Start learning today</h1>
@@ -853,7 +840,6 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
         </div>
     </section>
 
-    <!-- Footer -->
     <footer>
         <div class="footer-sections">
             <div class="footer-section">
@@ -885,34 +871,30 @@ List<Courses> recentCourses = coursesDAO.getRecentlyAddedCourses();
     </footer>
 
     <script>
-        // Pass authentication status to JavaScript
         const isAuthenticated = <%= isAuthenticated %>;
 
-        // Redirect logic for unauthenticated users
         document.querySelectorAll('.action-link, [data-action], .enroll-btn').forEach(element => {
             element.addEventListener('click', (e) => {
-                e.preventDefault();
                 const action = element.getAttribute('data-action');
 
                 if (action === 'login') {
+                    e.preventDefault();
                     console.log('Redirecting to login.jsp');
                     window.location.href = 'login.jsp';
                 } else if (action === 'publisher-login') {
+                    e.preventDefault();
                     console.log('Redirecting to publisher_login.jsp');
                     window.location.href = 'publisher_login.jsp';
-                } else if (!isAuthenticated) {
+                } else if (!isAuthenticated && element.classList.contains('enroll-btn')) {
+                    e.preventDefault();
                     console.log('Unauthenticated user, redirecting to login.jsp');
                     window.location.href = 'login.jsp';
-                } else {
-                    console.log('Authenticated user, no redirect needed');
-                    if (element.classList.contains('enroll-btn')) {
-                        console.log('Enroll Now clicked for: ' + element.closest('.course-card').querySelector('.course-title').textContent);
-                    }
+                } else if (element.classList.contains('enroll-btn')) {
+                    console.log('Enroll Now clicked for: ' + element.closest('.course-card').querySelector('.course-title').textContent);
                 }
             });
         });
 
-        // Simple script to toggle mobile menu (would be expanded in production)
         document.querySelectorAll('.course-card').forEach(card => {
             card.addEventListener('click', function(e) {
                 if (!e.target.classList.contains('enroll-btn') && !e.target.classList.contains('edit-btn') && !e.target.classList.contains('delete-btn')) {

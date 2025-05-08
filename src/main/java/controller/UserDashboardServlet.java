@@ -27,8 +27,8 @@ public class UserDashboardServlet extends HttpServlet {
         response.setDateHeader("Expires", 0);
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
-            System.out.println("UserDashboardServlet: No session or userId, redirecting to login.");
+        if (session == null || session.getAttribute("userId") == null || !"USER".equals(session.getAttribute("role"))) {
+            System.out.println("UserDashboardServlet: No session, userId, or incorrect role, redirecting to login.");
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
@@ -37,17 +37,16 @@ public class UserDashboardServlet extends HttpServlet {
         try {
             System.out.println("UserDashboardServlet: Fetching user with ID: " + userId);
             User user = userDao.getUserById(userId);
-            if (user != null) {
-                request.setAttribute("user", user);
-                System.out.println("UserDashboardServlet: Forwarding to user_dashboard.jsp for user ID: " + userId);
-                request.getRequestDispatcher("/user_dashboard.jsp").forward(request, response);
-            } else {
+            if (user == null) {
                 System.out.println("UserDashboardServlet: User not found for ID: " + userId + ", redirecting to login.");
-                session.invalidate();
                 response.sendRedirect(request.getContextPath() + "/login");
+                return;
             }
+            request.setAttribute("user", user);
+            System.out.println("UserDashboardServlet: Forwarding to user_dashboard.jsp for user ID: " + userId);
+            request.getRequestDispatcher("/user_dashboard.jsp").forward(request, response);
         } catch (Exception e) {
-            System.out.println("UserDashboardServlet: Error in doGet - " + e.getMessage());
+            System.err.println("UserDashboardServlet: Error in doGet - " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/login");
         }
     }
@@ -60,8 +59,8 @@ public class UserDashboardServlet extends HttpServlet {
         response.setDateHeader("Expires", 0);
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
-            System.out.println("UserDashboardServlet: No session or userId in doPost, redirecting to login.");
+        if (session == null || session.getAttribute("userId") == null || !"USER".equals(session.getAttribute("role"))) {
+            System.out.println("UserDashboardServlet: No session, userId, or incorrect role in doPost, redirecting to login.");
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
@@ -70,7 +69,6 @@ public class UserDashboardServlet extends HttpServlet {
         User user = userDao.getUserById(userId);
         if (user == null) {
             System.out.println("UserDashboardServlet: User not found for ID in doPost: " + userId + ", redirecting to login.");
-            session.invalidate();
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }

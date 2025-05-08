@@ -1,6 +1,8 @@
 package dao;
 
+import model.Booking;
 import model.Courses;
+import model.Payment;
 import util.DatabaseUtil;
 
 import java.sql.*;
@@ -139,5 +141,86 @@ public class CoursesDAO {
             e.printStackTrace();
         }
         return courses;
+    }
+
+    public Courses getCourseById(int courseId) {
+        String sql = "SELECT * FROM courses WHERE id = ?";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, courseId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                Courses course = new Courses();
+                course.setId(rs.getInt("id"));
+                course.setTitle(rs.getString("title"));
+                course.setCategory(rs.getString("category"));
+                course.setInstructor(rs.getString("instructor"));
+                course.setPrice(rs.getDouble("price"));
+                course.setImagePath(rs.getString("image_path"));
+                course.setPublisherId(rs.getInt("publisher_id"));
+                course.setCreatedAt(rs.getString("created_at"));
+                return course;
+            }
+        } catch (SQLException e) {
+            System.err.println("CoursesDAO: Error fetching course by ID " + courseId + ": " + e.getMessage());
+        }
+        return null;
+    }
+
+    public List<Courses> getEnrolledCourses(int userId) {
+        List<Courses> enrolledCourses = new ArrayList<>();
+        String sql = "SELECT c.* FROM courses c JOIN bookings b ON c.id = b.course_id WHERE b.user_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Courses course = new Courses();
+                course.setId(rs.getInt("id"));
+                course.setTitle(rs.getString("title"));
+                course.setCategory(rs.getString("category"));
+                course.setInstructor(rs.getString("instructor"));
+                course.setPrice(rs.getDouble("price"));
+                course.setImagePath(rs.getString("image_path"));
+                course.setPublisherId(rs.getInt("publisher_id"));
+                course.setCreatedAt(rs.getString("created_at"));
+                enrolledCourses.add(course);
+            }
+        } catch (SQLException e) {
+            System.err.println("CoursesDAO: Error fetching enrolled courses for userId " + userId + ": " + e.getMessage());
+        }
+        return enrolledCourses;
+    }
+
+    public boolean recordPayment(Payment payment) {
+        String sql = "INSERT INTO payments (user_id, course_id, amount, payment_date, status) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, payment.getUserId());
+            stmt.setInt(2, payment.getCourseId());
+            stmt.setDouble(3, payment.getAmount());
+            stmt.setTimestamp(4, payment.getPaymentDate());
+            stmt.setString(5, payment.getStatus());
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("CoursesDAO: Error recording payment: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean recordBooking(Booking booking) {
+        String sql = "INSERT INTO bookings (user_id, course_id, booking_date) VALUES (?, ?, ?)";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, booking.getUserId());
+            stmt.setInt(2, booking.getCourseId());
+            stmt.setTimestamp(3, booking.getBookingDate());
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("CoursesDAO: Error recording booking: " + e.getMessage());
+            return false;
+        }
     }
 }

@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="model.User" %>
+<%@ page import="model.User, java.util.List, model.Courses, dao.CoursesDAO" %>
 <%@ page import="java.util.Base64" %>
 <%
 // Caching prevention
@@ -7,10 +7,40 @@ response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 response.setHeader("Pragma", "no-cache");
 response.setDateHeader("Expires", 0);
 
-User user = (User) request.getAttribute("user");
-if (user == null) {
+// Fetch session attributes safely
+Integer userId = null;
+String role = null;
+try {
+    userId = (Integer) session.getAttribute("userId");
+    role = (String) session.getAttribute("role");
+} catch (Exception e) {
+    System.out.println("user_dashboard.jsp: Error fetching session attributes - " + e.getMessage());
+}
+
+// Since UserDashboardServlet already checks session and role, this should be safe
+// But we'll keep a minimal check for safety
+if (userId == null || role == null || !"USER".equals(role)) {
+    System.out.println("user_dashboard.jsp: Invalid session - userId: " + userId + ", role: " + role + ", redirecting to login");
     response.sendRedirect(request.getContextPath() + "/login");
     return;
+}
+
+User user = (User) request.getAttribute("user");
+if (user == null) {
+    System.out.println("user_dashboard.jsp: User not found in request attributes, redirecting to login");
+    response.sendRedirect(request.getContextPath() + "/login");
+    return;
+}
+
+// Fetch enrolled courses
+CoursesDAO coursesDAO = new CoursesDAO();
+List<Courses> enrolledCourses = null;
+try {
+    enrolledCourses = coursesDAO.getEnrolledCourses(userId);
+    System.out.println("user_dashboard.jsp: Successfully fetched " + (enrolledCourses != null ? enrolledCourses.size() : 0) + " enrolled courses for userId: " + userId);
+} catch (Exception e) {
+    System.err.println("user_dashboard.jsp: Error fetching enrolled courses for userId " + userId + ": " + e.getMessage());
+    request.setAttribute("error", "Failed to load enrolled courses. Please try again later.");
 }
 %>
 <!DOCTYPE html>
@@ -274,6 +304,28 @@ if (user == null) {
         .tab-content.active {
             display: block;
         }
+        .course-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .course-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-right: 20px;
+        }
+        .course-item h4 {
+            margin: 0;
+            color: #1a3c34;
+        }
+        .course-item p {
+            margin: 5px 0;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -283,17 +335,18 @@ if (user == null) {
             <div class="user-profile">
                 <div class="profile-pic">
                     <% 
-                        String profileImageSrc = "https://via.placeholder.com/100?text=" + 
-                            (user.getUsername() != null && user.getUsername().length() > 0 ? 
-                                user.getUsername().substring(0, 1).toUpperCase() : "U");
-                        if (user.getImage() != null && user.getImage().length > 0) {
-                            try {
+                        String profileImageSrc = "https://via.placeholder.com/100?text=U";
+                        try {
+                            if (user.getUsername() != null && user.getUsername().length() > 0) {
+                                profileImageSrc = "https://via.placeholder.com/100?text=" + user.getUsername().substring(0, 1).toUpperCase();
+                            }
+                            if (user.getImage() != null && user.getImage().length > 0) {
                                 String base64Image = Base64.getEncoder().encodeToString(user.getImage());
                                 profileImageSrc = "data:image/jpeg;base64," + base64Image;
                                 System.out.println("JSP: Rendering image for user ID " + user.getId() + ", Base64 length: " + base64Image.length());
-                            } catch (Exception e) {
-                                System.out.println("JSP: Error encoding image for user ID " + user.getId() + ": " + e.getMessage());
                             }
+                        } catch (Exception e) {
+                            System.err.println("JSP: Error encoding image for user ID " + user.getId() + ": " + e.getMessage());
                         }
                     %>
                     <img src="<%= profileImageSrc %>" alt="Profile Picture" 
@@ -358,7 +411,7 @@ if (user == null) {
 
                     <div class="info-card">
                         <h3>Course Progress</h3>
-                        <p>You haven't enrolled in any courses yet.</p>
+                        <p>Track your learning journey and course completion status here.</p>
                     </div>
                 </div>
 
@@ -366,54 +419,61 @@ if (user == null) {
                     <h2 class="section-title">My Courses</h2>
                     <div class="info-card">
                         <h3>Enrolled Courses</h3>
-                        <p>You haven't enrolled in any courses yet.</p>
+                        <% if (enrolledCourses != null && !enrolledCourses.isEmpty()) { %>
+                            <% for (Courses course : enrolledCourses) { %>
+                                <div class="course-item">
+                                    <% 
+                                        String imagePath = null;
+                                        String courseImageSrc = "https://via.placeholder.com/100?text=Course";
+                                        try {
+                                            imagePath = course.getImagePath();
+                                            courseImageSrc = (imagePath != null && !imagePath.isEmpty()) ? 
+                                                request.getContextPath() + "/" + imagePath : 
+                                                "https://via.placeholder.com/100?text=Course";
+                                        } catch (Exception e) {
+                                            System.err.println("JSP: Error accessing course image path for course ID " + course.getId() + ": " + e.getMessage());
+                                        }
+                                    %>
+                                    <img src="<%= courseImageSrc %>" alt="<%= course.getTitle() != null ? course.getTitle() : "Course" %>">
+                                    <div>
+                                        <h4><%= (course.getTitle() != null ? course.getTitle() : "Untitled Course") %></h4>
+                                        <p>Instructor: <%= (course.getInstructor() != null ? course.getInstructor() : "Unknown") %></p>
+                                        <p>Category: <%= (course.getCategory() != null ? course.getCategory() : "N/A") %></p>
+                                    </div>
+                                </div>
+                            <% } %>
+                        <% } else { %>
+                            <p>No courses enrolled yet. <a href="${pageContext.request.contextPath}/courses.jsp">Explore courses now!</a></p>
+                        <% } %>
                     </div>
                 </div>
 
                 <div id="settings" class="tab-content">
-                    <h2 class="section-title">Settings</h2>
+                    <h2 class="section-title">Account Settings</h2>
                     <div class="info-card">
-                        <h3>Update Credentials</h3>
-                        <form action="${pageContext.request.contextPath}/user_dashboard" method="post" class="edit-form">
-                            <input type="hidden" name="action" value="updateCredentials">
-                            <div>
-                                <label for="username">Username:</label>
-                                <input type="text" id="username" name="username" 
-                                       value="<%= user.getUsername() != null ? user.getUsername() : "" %>" required>
-                            </div>
-                            <div>
-                                <label for="email">Email:</label>
-                                <input type="email" id="email" name="email" 
-                                       value="<%= user.getEmail() != null ? user.getEmail() : "" %>" required>
-                            </div>
-                            <div>
-                                <label for="currentPassword">Current Password:</label>
-                                <input type="password" id="currentPassword" name="currentPassword" required>
-                            </div>
-                            <div>
-                                <label for="newPassword">New Password:</label>
-                                <input type="password" id="newPassword" name="newPassword">
-                            </div>
-                            <div>
-                                <label for="confirmNewPassword">Confirm New Password:</label>
-                                <input type="password" id="confirmNewPassword" name="confirmNewPassword">
-                            </div>
-                            <button type="submit">Update</button>
+                        <h3>Update Profile Picture</h3>
+                        <form class="edit-form" action="${pageContext.request.contextPath}/user_dashboard" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="action" value="uploadImage">
+                            <label for="profileImage">Profile Picture:</label>
+                            <input type="file" id="profileImage" name="profileImage" accept="image/*">
+                            <button type="submit">Update Picture</button>
                         </form>
                     </div>
-
                     <div class="info-card">
-                        <h3>Update Profile Image</h3>
-                        <form action="${pageContext.request.contextPath}/user_dashboard" method="post" 
-                              class="edit-form" enctype="multipart/form-data" 
-                              onsubmit="return validateImageForm(this)">
-                            <input type="hidden" name="action" value="uploadImage">
-                            <div>
-                                <label for="settingsProfileImage">Profile Image (PNG/JPG, max 5MB):</label>
-                                <input type="file" id="settingsProfileImage" name="profileImage" 
-                                       accept="image/png,image/jpeg" required>
-                            </div>
-                            <button type="submit">Upload Image</button>
+                        <h3>Update Credentials</h3>
+                        <form class="edit-form" action="${pageContext.request.contextPath}/user_dashboard" method="post">
+                            <input type="hidden" name="action" value="updateCredentials">
+                            <label for="username">Username:</label>
+                            <input type="text" id="username" name="username" value="<%= user.getUsername() != null ? user.getUsername() : "" %>" required><br>
+                            <label for="email">Email:</label>
+                            <input type="email" id="email" name="email" value="<%= user.getEmail() != null ? user.getEmail() : "" %>" required><br>
+                            <label for="currentPassword">Current Password:</label>
+                            <input type="password" id="currentPassword" name="currentPassword" required><br>
+                            <label for="newPassword">New Password (optional):</label>
+                            <input type="password" id="newPassword" name="newPassword"><br>
+                            <label for="confirmNewPassword">Confirm New Password:</label>
+                            <input type="password" id="confirmNewPassword" name="confirmNewPassword"><br>
+                            <button type="submit">Update Credentials</button>
                         </form>
                     </div>
                 </div>
@@ -422,41 +482,16 @@ if (user == null) {
     </div>
 
     <script>
-        // Tab switching logic
         document.querySelectorAll('.sidebar-nav a').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
-                const tab = this.getAttribute('data-tab');
-
-                // Remove active class from all links and tabs
-                document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
-                // Add active class to clicked link and corresponding tab
+                document.querySelectorAll('.sidebar-nav a').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
-                document.getElementById(tab).classList.add('active');
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
             });
         });
-
-        // Client-side form validation for image upload
-        function validateImageForm(form) {
-            const fileInput = form.querySelector('#settingsProfileImage');
-            const file = fileInput.files[0];
-            if (!file) {
-                alert('Please select an image file.');
-                return false;
-            }
-            const validTypes = ['image/png', 'image/jpeg'];
-            if (!validTypes.includes(file.type)) {
-                alert('Only PNG or JPEG images are allowed.');
-                return false;
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Image size exceeds 5MB limit.');
-                return false;
-            }
-            return true;
-        }
     </script>
 </body>
 </html>

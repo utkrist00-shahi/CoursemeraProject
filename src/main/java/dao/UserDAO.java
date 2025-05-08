@@ -64,6 +64,7 @@ public class UserDAO {
 
     public User getUserByUsername(String username) {
         if (username == null || username.trim().isEmpty()) {
+            System.out.println("UserDAO: Invalid username provided (null or empty)");
             return null;
         }
 
@@ -74,7 +75,10 @@ public class UserDAO {
             
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
+                    System.out.println("UserDAO: Found user with username: " + username);
                     return mapResultSetToUser(rs);
+                } else {
+                    System.out.println("UserDAO: No user found with username: " + username);
                 }
             }
             return null;
@@ -88,6 +92,7 @@ public class UserDAO {
 
     public User getUserByEmail(String email) {
         if (email == null || email.trim().isEmpty()) {
+            System.out.println("UserDAO: Invalid email provided (null or empty)");
             return null;
         }
 
@@ -98,7 +103,10 @@ public class UserDAO {
             
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
+                    System.out.println("UserDAO: Found user with email: " + email);
                     return mapResultSetToUser(rs);
+                } else {
+                    System.out.println("UserDAO: No user found with email: " + email);
                 }
             }
             return null;
@@ -118,13 +126,16 @@ public class UserDAO {
             
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
+                    System.out.println("UserDAO: Successfully retrieved user with ID: " + userId);
                     return mapResultSetToUser(rs);
+                } else {
+                    System.out.println("UserDAO: No user found with ID: " + userId);
                 }
             }
             return null;
 
         } catch (SQLException e) {
-            System.err.println("SQL Error in getUserById: " + e.getMessage());
+            System.err.println("SQL Error in getUserById for userId " + userId + ": " + e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -158,10 +169,11 @@ public class UserDAO {
             stmt.setInt(3, userId);
 
             int rowsAffected = stmt.executeUpdate();
+            System.out.println("UserDAO: Updated credentials for userId " + userId + ", rows affected: " + rowsAffected);
             return rowsAffected > 0;
 
         } catch (SQLException e) {
-            System.err.println("SQL Error in updateUserCredentials: " + e.getMessage());
+            System.err.println("SQL Error in updateUserCredentials for userId " + userId + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -176,10 +188,11 @@ public class UserDAO {
             stmt.setInt(2, userId);
 
             int rowsAffected = stmt.executeUpdate();
+            System.out.println("UserDAO: Updated password for userId " + userId + ", rows affected: " + rowsAffected);
             return rowsAffected > 0;
 
         } catch (SQLException e) {
-            System.err.println("SQL Error in updateUserPassword: " + e.getMessage());
+            System.err.println("SQL Error in updateUserPassword for userId " + userId + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }
