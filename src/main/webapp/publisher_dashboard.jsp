@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="java.util.List, model.Courses, dao.CoursesDAO, model.Publisher, dao.PublisherDAO" %>
+<%@ page import="java.util.List, model.Courses, dao.CoursesDAO, model.Publisher, dao.PublisherDAO, java.nio.file.Paths" %>
 <%
 // Prevent caching
 response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -324,7 +324,7 @@ if (error != null) {
             font-size: 14px;
         }
 
-        .edit-btn, .delete-btn, .save-btn, .cancel-btn, .upload-btn, .view-pdf-btn {
+        .edit-btn, .delete-btn, .save-btn, .cancel-btn, .upload-btn {
             padding: 10px;
             border-radius: var(--border-radius);
             font-weight: 600;
@@ -366,12 +366,7 @@ if (error != null) {
             color: black;
         }
 
-        .view-pdf-btn {
-            background-color: #3498db;
-            color: #fff;
-        }
-
-        .edit-btn:hover, .delete-btn:hover, .save-btn:hover, .cancel-btn:hover, .upload-btn:hover, .view-pdf-btn:hover {
+        .edit-btn:hover, .delete-btn:hover, .save-btn:hover, .cancel-btn:hover, .upload-btn:hover {
             transform: translateY(-2px);
         }
 
@@ -387,69 +382,6 @@ if (error != null) {
             font-size: 14px;
             text-align: center;
             margin: 10px 0;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-        }
-        .modal-content {
-            background-color: #fff;
-            margin: 5% auto;
-            padding: 20px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 800px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            position: relative;
-        }
-        .modal-content h3 {
-            margin: 0 0 15px;
-            color: #333;
-            font-size: 20px;
-        }
-        .modal-content p {
-            margin: 10px 0;
-            color: #666;
-        }
-        .modal-content object {
-            width: 100%;
-            height: 400px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        .modal-content .download-btn {
-            background-color: #8a2be2;
-            color: #fff;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 20px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: background-color 0.3s;
-        }
-        .modal-content .download-btn:hover {
-            background-color: #6a1ab6;
-        }
-        .close {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 24px;
-            cursor: pointer;
-            color: #888;
-        }
-        .close:hover {
-            color: #555;
         }
 
         footer {
@@ -592,6 +524,16 @@ if (error != null) {
                                         String imagePath = course.getImagePath() != null && !course.getImagePath().isEmpty() ? 
                                             request.getContextPath() + "/" + course.getImagePath() : 
                                             "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+                                        // Safely extract the filename from book_pdf_filename
+                                        String pdfDisplayName = "Not uploaded";
+                                        if (course.getBookPdfFilename() != null && !course.getBookPdfFilename().isEmpty()) {
+                                            try {
+                                                pdfDisplayName = Paths.get(course.getBookPdfFilename()).getFileName().toString();
+                                            } catch (Exception e) {
+                                                pdfDisplayName = course.getBookPdfFilename(); // Fallback to raw value
+                                                System.err.println("Error parsing PDF filename for course ID " + courseId + ": " + e.getMessage());
+                                            }
+                                        }
                     %>
                         <div class="course-card" id="course-<%= courseIdStr %>">
                             <div class="course-display">
@@ -607,10 +549,7 @@ if (error != null) {
                                             <div class="rating-count">(0)</div>
                                         </div>
                                     </div>
-                                    <p><strong>Book PDF:</strong> <%= course.getBookPdfFilename() != null ? course.getBookPdfFilename() : "Not uploaded" %></p>
-                                    <% if (course.getBookPdfFilename() != null && !course.getBookPdfFilename().isEmpty()) { %>
-                                        <button class="view-pdf-btn" onclick="openModal('<%= courseIdStr %>', '<%= course.getBookPdfFilename() %>')">View PDF</button>
-                                    <% } %>
+                                    <p><strong>Book PDF:</strong> <%= pdfDisplayName %></p>
                                     <div class="button-container">
                                         <button class="edit-btn" onclick="toggleEditForm('<%= courseIdStr %>')">Edit</button>
                                         <form action="${pageContext.request.contextPath}/CourseManagementServlet" method="post" style="width: 100%;">
@@ -641,7 +580,7 @@ if (error != null) {
                                     <label for="bookPdf-<%= courseIdStr %>">Book PDF (optional):</label>
                                     <input type="file" id="bookPdf-<%= courseIdStr %>" name="bookPdf" accept="application/pdf">
                                     <% if (course.getBookPdfFilename() != null && !course.getBookPdfFilename().isEmpty()) { %>
-                                        <p>Current Book PDF: <%= course.getBookPdfFilename() %></p>
+                                        <p>Current Book PDF: <%= pdfDisplayName %></p>
                                     <% } else { %>
                                         <p>Current Book PDF: Not uploaded</p>
                                     <% } %>
@@ -712,19 +651,6 @@ if (error != null) {
                 </div>
             </div>
         </section>
-    </div>
-
-    <!-- PDF Modal -->
-    <div id="pdfModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">×</span>
-            <h3>Course PDF Overview</h3>
-            <p id="modalFilename"></p>
-            <object id="pdfPreview" type="application/pdf" data="">
-                <p>PDF preview not supported by your browser. Please download the file to view it.</p>
-            </object>
-            <button class="download-btn" onclick="downloadPDF()">Download</button>
-        </div>
     </div>
 
     <footer>
@@ -909,103 +835,6 @@ if (error != null) {
                 console.error('Error in validateProfileForm:', error);
                 alert('An error occurred while validating the profile form.');
                 return false;
-            }
-        }
-
-        function openModal(courseId, filename) {
-            try {
-                if (!courseId || courseId === 'null' || courseId === '' || isNaN(Number(courseId))) {
-                    console.error('Invalid courseId passed to openModal:', courseId);
-                    alert('Error: Invalid course ID (' + courseId + '). Cannot open PDF.');
-                    return;
-                }
-                
-                const modalFilename = document.getElementById('modalFilename');
-                const pdfPreview = document.getElementById('pdfPreview');
-                const pdfModal = document.getElementById('pdfModal');
-
-                if (!modalFilename || !pdfPreview || !pdfModal) {
-                    console.error('Modal elements not found:', { modalFilename, pdfPreview, pdfModal });
-                    alert('Error: PDF modal elements not found. Check the console for details.');
-                    return;
-                }
-
-                modalFilename.innerText = filename;
-                pdfPreview.setAttribute('data', '${pageContext.request.contextPath}/CourseManagementServlet?action=downloadPdf&courseId=' + courseId + '&inline=true');
-                pdfModal.style.display = 'block';
-                window.currentCourseId = courseId; // Store courseId for download
-            } catch (error) {
-                console.error('Error in openModal for courseId ' + courseId + ':', error);
-                alert('An error occurred while opening the PDF modal.');
-            }
-        }
-
-        function closeModal() {
-            try {
-                const pdfModal = document.getElementById('pdfModal');
-                const pdfPreview = document.getElementById('pdfPreview');
-
-                if (!pdfModal || !pdfPreview) {
-                    console.error('Modal elements not found:', { pdfModal, pdfPreview });
-                    alert('Error: PDF modal elements not found. Check the console for details.');
-                    return;
-                }
-
-                pdfModal.style.display = 'none';
-                pdfPreview.setAttribute('data', ''); // Clear PDF to prevent caching issues
-            } catch (error) {
-                console.error('Error in closeModal:', error);
-                alert('An error occurred while closing the PDF modal.');
-            }
-        }
-
-        function downloadPDF() {
-            try {
-                if (!window.currentCourseId) {
-                    console.error('No courseId set for downloadPDF');
-                    alert('Error: No course selected for download.');
-                    return;
-                }
-
-                const form = document.createElement('form');
-                form.method = 'GET';
-                form.action = '${pageContext.request.contextPath}/CourseManagementServlet';
-                form.target = '_blank'; // Open in new tab to handle download
-
-                const input1 = document.createElement('input');
-                input1.type = 'hidden';
-                input1.name = 'action';
-                input1.value = 'downloadPdf';
-
-                const input2 = document.createElement('input');
-                input2.type = 'hidden';
-                input2.name = 'courseId';
-                input2.value = window.currentCourseId;
-
-                const input3 = document.createElement('input');
-                input3.type = 'hidden';
-                input3.name = 'inline';
-                input3.value = 'false'; // Force download
-
-                form.appendChild(input1);
-                form.appendChild(input2);
-                form.appendChild(input3);
-                document.body.appendChild(form);
-                form.submit();
-                document.body.removeChild(form);
-
-                closeModal(); // Close modal after initiating download
-            } catch (error) {
-                console.error('Error in downloadPDF:', error);
-                alert('An error occurred while downloading the PDF.');
-            }
-        }
-
-        // Close modal if user clicks outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('pdfModal');
-            if (event.target == modal) {
-                closeModal();
             }
         }
     </script>

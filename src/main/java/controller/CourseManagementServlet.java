@@ -180,26 +180,6 @@ public class CourseManagementServlet extends HttpServlet {
          return;
       }
 
-      String action = request.getParameter("action");
-      if ("downloadPdf".equals(action)) {
-         int courseId = Integer.parseInt(request.getParameter("courseId"));
-         boolean inline = Boolean.parseBoolean(request.getParameter("inline"));
-         Courses course = coursesDAO.getCourseById(courseId, publisherId);
-         if (course != null && course.getBookPdfFilename() != null) {
-            String filePath = request.getServletContext().getRealPath("") + File.separator + "uploads" + File.separator + course.getBookPdfFilename();
-            java.nio.file.Files.copy(new File(filePath).toPath(), response.getOutputStream());
-            response.setContentType("application/pdf");
-            if (!inline) {
-               response.setHeader("Content-Disposition", "attachment; filename=\"" + course.getBookPdfFilename() + "\"");
-            }
-            response.getOutputStream().flush();
-            return;
-         } else {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "PDF not found for course ID: " + courseId);
-            return;
-         }
-      }
-
       request.setAttribute("courses", this.coursesDAO.getCoursesByPublisher(publisherId));
       request.getRequestDispatcher("publisher_dashboard.jsp").forward(request, response);
    }

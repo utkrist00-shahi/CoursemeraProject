@@ -60,7 +60,7 @@ try {
             --text-color: #2d3436;
             --light-text: #636e72;
             --border-radius: 8px;
-            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             --transition: all 0.3s ease;
         }
 
@@ -394,7 +394,7 @@ try {
             margin: 10px 0;
             color: #666;
         }
-        .modal-content object {
+        .modal-content iframe {
             width: 100%;
             height: 400px;
             border: 1px solid #ddd;
@@ -539,8 +539,8 @@ try {
                                         <p>Instructor: <%= (course.getInstructor() != null ? course.getInstructor() : "Unknown") %></p>
                                         <p>Category: <%= (course.getCategory() != null ? course.getCategory() : "N/A") %></p>
                                         <div class="button-container">
-                                            <% if (course.getBookPdfFilename() != null) { %>
-                                                <button class="view-book-btn" onclick="openModal('<%= course.getId() %>', '<%= course.getBookPdfFilename() %>', '<%= course.getTitle() %>')">View Book</button>
+                                            <% if (course.getBookPdfFilename() != null && !course.getBookPdfFilename().isEmpty()) { %>
+                                                <button class="view-book-btn" onclick="openModal('<%= course.getId() %>', '<%= course.getBookPdfFilename() %>')">View Book</button>
                                             <% } else { %>
                                                 <p>No book available</p>
                                             <% } %>
@@ -591,11 +591,9 @@ try {
     <div id="bookModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">×</span>
-            <h3>Book Overview</h3>
+            <h3>Course PDF Overview</h3>
             <p id="modalFilename"></p>
-            <object id="pdfPreview" type="application/pdf" data="">
-                <p>PDF preview not supported by your browser. Please download the file to view it.</p>
-            </object>
+            <iframe id="pdfPreview" src="" frameborder="0"></iframe>
             <button class="download-btn" onclick="downloadBook()">Download</button>
         </div>
     </div>
@@ -612,31 +610,55 @@ try {
             });
         });
 
-        function openModal(courseId, filename, title) {
+        function openModal(courseId, filename) {
             try {
+                console.log('openModal called with courseId:', courseId, 'filename:', filename);
                 if (!courseId || courseId === 'null' || courseId === '' || isNaN(Number(courseId))) {
-                    console.error('Invalid courseId passed to openModal:', courseId);
-                    alert('Error: Invalid course ID (' + courseId + '). Cannot open PDF.');
+                    console.error('Invalid courseId:', courseId, 'Type:', typeof courseId);
+                    alert('Error: Invalid course ID (' + courseId + '). Please check the course data.');
                     return;
                 }
-                
+
                 const modalFilename = document.getElementById('modalFilename');
                 const pdfPreview = document.getElementById('pdfPreview');
                 const bookModal = document.getElementById('bookModal');
 
                 if (!modalFilename || !pdfPreview || !bookModal) {
-                    console.error('Modal elements not found:', { modalFilename, pdfPreview, bookModal });
-                    alert('Error: PDF modal elements not found. Check the console for details.');
+                    console.error('Modal elements missing:', {
+                        modalFilename: !!modalFilename,
+                        pdfPreview: !!pdfPreview,
+                        bookModal: !!bookModal
+                    });
+                    alert('Error: PDF modal components not found. Please check the browser console.');
                     return;
                 }
 
-                modalFilename.innerText = title + " Book (" + filename + ")";
-                pdfPreview.setAttribute('data', '${pageContext.request.contextPath}/user_download_book?courseId=' + courseId + '&inline=true');
+                // Reset modal state
+                modalFilename.innerText = filename;
+                pdfPreview.src = '';
+
+                // Try primary and fallback URLs
+                const baseUrl = '${pageContext.request.contextPath}/user_download_book?courseId=' + encodeURIComponent(courseId) + '&download=false';
+                let pdfUrl = baseUrl;
+                if (!filename.startsWith('Uploads/')) {
+                    pdfUrl = baseUrl + '&fallback=true';
+                    console.log('Using fallback URL for non-prefixed filename:', filename);
+                }
+                console.log('Setting pdfPreview src to:', pdfUrl);
+
+                // Show modal and set iframe src
                 bookModal.style.display = 'block';
-                window.currentCourseId = courseId; // Store courseId for download
+                setTimeout(() => {
+                    pdfPreview.src = pdfUrl;
+                    console.log('pdfPreview src set to:', pdfUrl);
+                }, 100);
+
+                window.currentCourseId = courseId;
+                window.currentFilename = filename;
+                console.log('Modal opened, currentCourseId set to:', window.currentCourseId, 'filename:', filename);
             } catch (error) {
                 console.error('Error in openModal for courseId ' + courseId + ':', error);
-                alert('An error occurred while opening the PDF modal.');
+                alert('An error occurred while opening the PDF modal. Please check the browser console.');
             }
         }
 
@@ -646,52 +668,56 @@ try {
                 const pdfPreview = document.getElementById('pdfPreview');
 
                 if (!bookModal || !pdfPreview) {
-                    console.error('Modal elements not found:', { bookModal, pdfPreview });
-                    alert('Error: PDF modal elements not found. Check the console for details.');
+                    console.error('Modal elements missing:', {
+                        bookModal: !!bookModal,
+                        pdfPreview: !!pdfPreview
+                    });
+                    alert('Error: PDF modal components not found. Please check the browser console.');
                     return;
                 }
 
                 bookModal.style.display = 'none';
-                pdfPreview.setAttribute('data', ''); // Clear PDF to prevent caching issues
+                pdfPreview.src = '';
+                window.currentCourseId = null;
+                window.currentFilename = null;
+                console.log('Modal closed, currentCourseId and filename cleared');
             } catch (error) {
                 console.error('Error in closeModal:', error);
-                alert('An error occurred while closing the PDF modal.');
+                alert('An error occurred while closing the PDF modal. Please check the browser console.');
             }
         }
 
         function downloadBook() {
             try {
+                console.log('downloadBook called, currentCourseId:', window.currentCourseId, 'filename:', window.currentFilename);
                 if (!window.currentCourseId) {
                     console.error('No courseId set for downloadBook');
-                    alert('Error: No course selected for download.');
+                    alert('Error: No course selected for download. Please try opening the modal again.');
                     return;
                 }
 
-                const form = document.createElement('form');
-                form.method = 'GET';
-                form.action = '${pageContext.request.contextPath}/user_download_book';
-                form.target = '_blank';
+                // Try primary and fallback URLs
+                let downloadUrl = '${pageContext.request.contextPath}/user_download_book?courseId=' + encodeURIComponent(window.currentCourseId) + '&download=true';
+                if (window.currentFilename && !window.currentFilename.startsWith('Uploads/')) {
+                    downloadUrl += '&fallback=true';
+                    console.log('Using fallback URL for download:', window.currentFilename);
+                }
+                console.log('Initiating download with URL:', downloadUrl);
 
-                const input1 = document.createElement('input');
-                input1.type = 'hidden';
-                input1.name = 'courseId';
-                input1.value = window.currentCourseId;
+                // Create a hidden link to trigger download
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = '';
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
 
-                const input2 = document.createElement('input');
-                input2.type = 'hidden';
-                input2.name = 'inline';
-                input2.value = 'false';
-
-                form.appendChild(input1);
-                form.appendChild(input2);
-                document.body.appendChild(form);
-                form.submit();
-                document.body.removeChild(form);
-
+                console.log('Download triggered for courseId:', window.currentCourseId);
                 closeModal();
             } catch (error) {
                 console.error('Error in downloadBook:', error);
-                alert('An error occurred while downloading the PDF.');
+                alert('An error occurred while downloading the PDF. Please check the browser console.');
             }
         }
 
