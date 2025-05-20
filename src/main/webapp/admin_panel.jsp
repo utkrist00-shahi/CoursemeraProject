@@ -2,18 +2,13 @@
 <%@ page import="java.util.List" %>
 <%@ page import="model.Publisher" %>
 <%
-// Session check with try-catch to handle potential response commitment issues
-try {
-    if (session == null || session.getAttribute("role") == null || !"ADMIN".equals(session.getAttribute("role"))) {
-        System.out.println("admin_panel.jsp: Unauthorized access, redirecting to login");
-        response.sendRedirect(request.getContextPath() + "/login");
-        return;
-    }
-    System.out.println("admin_panel.jsp: Authorized access, username: " + session.getAttribute("username"));
-} catch (IllegalStateException e) {
-    System.err.println("admin_panel.jsp: Response already committed during redirect: " + e.getMessage());
-    return;
+// Session check before any output
+if (session == null || session.getAttribute("role") == null || !"ADMIN".equals(session.getAttribute("role"))) {
+    System.out.println("admin_panel.jsp: Unauthorized access, redirecting to login");
+    response.sendRedirect(request.getContextPath() + "/login");
+    return; // Stop further processing
 }
+System.out.println("admin_panel.jsp: Authorized access, username: " + session.getAttribute("username"));
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -194,6 +189,13 @@ try {
         table td .reject-btn:hover {
             background-color: #c0392b;
         }
+        table td .delete-btn {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+        table td .delete-btn:hover {
+            background-color: #c0392b;
+        }
         table td .view-resume-btn {
             background-color: #3498db;
             color: #fff;
@@ -301,7 +303,7 @@ try {
         <div class="admin-nav">
             <button class="active" onclick="showSection('publishers')">Manage Publishers</button>
             <button onclick="showSection('courses')">Manage Courses</button>
-            <button onclick="showSection('users')">Manage Users</button>
+            <button onclick="window.location.href='${pageContext.request.contextPath}/admin_panel_users.jsp'">Manage Users</button>
         </div>
         <div id="publishers-section">
             <h3>Publisher Approvals</h3>
@@ -378,10 +380,6 @@ try {
             <h3>Manage Courses</h3>
             <p>Course management functionality will be implemented here.</p>
         </div>
-        <div id="users-section" style="display: none;">
-            <h3>Manage Users</h3>
-            <p>User management functionality will be implemented here.</p>
-        </div>
     </div>
 
     <!-- Footer -->
@@ -406,7 +404,6 @@ try {
         function showSection(sectionId) {
             document.getElementById('publishers-section').style.display = sectionId === 'publishers' ? 'block' : 'none';
             document.getElementById('courses-section').style.display = sectionId === 'courses' ? 'block' : 'none';
-            document.getElementById('users-section').style.display = sectionId === 'users' ? 'block' : 'none';
 
             document.querySelectorAll('.admin-nav button').forEach(btn => {
                 btn.classList.remove('active');
