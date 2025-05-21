@@ -302,7 +302,7 @@ System.out.println("admin_panel.jsp: Authorized access, username: " + session.ge
         <h2>Admin Panel</h2>
         <div class="admin-nav">
             <button class="active" onclick="showSection('publishers')">Manage Publishers</button>
-            <button onclick="showSection('courses')">Manage Courses</button>
+            <button onclick="window.location.href='${pageContext.request.contextPath}/admin_panel_courses.jsp'">Manage Courses</button>
             <button onclick="window.location.href='${pageContext.request.contextPath}/admin_panel_users.jsp'">Manage Users</button>
         </div>
         <div id="publishers-section">
@@ -376,12 +376,9 @@ System.out.println("admin_panel.jsp: Authorized access, username: " + session.ge
                 }
             %>
         </div>
-        <div id="courses-section" style="display: none;">
-            <h3>Manage Courses</h3>
-            <p>Course management functionality will be implemented here.</p>
         </div>
-    </div>
-
+        
+      
     <!-- Footer -->
     <footer>
         <p>© 2025 CourseMera. All rights reserved.</p>
@@ -403,7 +400,7 @@ System.out.println("admin_panel.jsp: Authorized access, username: " + session.ge
     <script>
         function showSection(sectionId) {
             document.getElementById('publishers-section').style.display = sectionId === 'publishers' ? 'block' : 'none';
-            document.getElementById('courses-section').style.display = sectionId === 'courses' ? 'block' : 'none';
+         
 
             document.querySelectorAll('.admin-nav button').forEach(btn => {
                 btn.classList.remove('active');

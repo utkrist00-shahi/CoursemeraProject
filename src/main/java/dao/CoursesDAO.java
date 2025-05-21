@@ -155,6 +155,19 @@ public class CoursesDAO {
         }
     }
 
+    public boolean deleteCourse(int courseId) {
+        String sql = "DELETE FROM courses WHERE id = ?";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, courseId);
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("CoursesDAO: Error deleting course ID " + courseId + ": " + e.getMessage());
+            return false;
+        }
+    }
+
     public List<Courses> getRecentlyAddedCourses() {
         List<Courses> courses = new ArrayList<>();
         String sql = "SELECT * FROM courses ORDER BY created_at DESC LIMIT 4";
@@ -236,5 +249,37 @@ public class CoursesDAO {
             System.err.println("CoursesDAO: Error recording booking: " + e.getMessage());
             return false;
         }
+    }
+
+    public List<Courses> getAllCourses() {
+        List<Courses> courses = new ArrayList<>();
+        String sql = "SELECT * FROM courses";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                int courseId = rs.getInt("id");
+                if (rs.wasNull() || courseId <= 0) {
+                    System.out.println("Warning: Skipping course with invalid or null ID: " + courseId);
+                    continue;
+                }
+                Courses course = new Courses();
+                course.setId(courseId);
+                course.setTitle(rs.getString("title"));
+                course.setCategory(rs.getString("category"));
+                course.setInstructor(rs.getString("instructor"));
+                course.setPrice(rs.getDouble("price"));
+                course.setImagePath(rs.getString("image_path"));
+                course.setPublisherId(rs.getInt("publisher_id"));
+                course.setCreatedAt(rs.getString("created_at"));
+                course.setBookPdfFilename(rs.getString("book_pdf_filename"));
+                courses.add(course);
+                System.out.println("Retrieved course: ID=" + courseId + ", Title=" + course.getTitle());
+            }
+        } catch (SQLException e) {
+            System.err.println("CoursesDAO: Error fetching all courses: " + e.getMessage());
+        }
+        System.out.println("CoursesDAO: Retrieved " + courses.size() + " valid courses");
+        return courses;
     }
 }

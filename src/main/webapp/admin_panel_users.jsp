@@ -216,7 +216,7 @@ System.out.println("admin_panel_users.jsp: Authorized access, username: " + sess
         <h2>Admin Panel - Manage Users</h2>
         <div class="admin-nav">
             <button onclick="window.location.href='${pageContext.request.contextPath}/admin_panel'">Manage Publishers</button>
-            <button onclick="window.location.href='${pageContext.request.contextPath}/admin_panel.jsp#courses-section'">Manage Courses</button>
+              <button onclick="window.location.href='${pageContext.request.contextPath}/admin_panel_courses.jsp'">Manage Courses</button>
             <button class="active">Manage Users</button>
         </div>
         <div id="users-section">

@@ -12,7 +12,6 @@ import jakarta.servlet.http.Part;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import model.Courses;
@@ -33,11 +32,32 @@ public class CourseManagementServlet extends HttpServlet {
 
    public void init() {
       this.coursesDAO = new CoursesDAO();
+      System.out.println("CourseManagementServlet: Initialized");
    }
 
    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-      HttpSession session = request.getSession();
-      Integer publisherId = (Integer)session.getAttribute("publisherId");
+      HttpSession session = request.getSession(false);
+      String role = (String) session.getAttribute("role");
+
+      // Handle admin delete action
+      if ("ADMIN".equals(role)) {
+         String action = request.getParameter("action");
+         if ("delete".equals(action)) {
+            int courseId = Integer.parseInt(request.getParameter("courseId"));
+            if (this.coursesDAO.deleteCourse(courseId)) {
+               request.setAttribute("message", "Course deleted successfully!");
+            } else {
+               request.setAttribute("error", "Failed to delete course.");
+            }
+            // Fetch all courses again and forward to admin panel
+            request.setAttribute("courses", this.coursesDAO.getAllCourses());
+            request.getRequestDispatcher("/admin_panel_courses.jsp").forward(request, response);
+            return;
+         }
+      }
+
+      // Original publisher logic
+      Integer publisherId = (Integer) session.getAttribute("publisherId");
       if (publisherId == null) {
          response.sendRedirect("publisher_login.jsp");
          return;
@@ -67,12 +87,10 @@ public class CourseManagementServlet extends HttpServlet {
             imagePart.write(fullPath);
 
             String pdfFileName = null;
-            String pdfFilePath = null;
-            byte[] pdfBytes = null;
             if (bookPdfPart != null && bookPdfPart.getSize() > 0) {
                pdfFileName = bookPdfPart.getSubmittedFileName();
                String uniquePdfFileName = UUID.randomUUID().toString() + "_" + pdfFileName;
-               pdfFilePath = "uploads" + File.separator + uniquePdfFileName;
+               String pdfFilePath = "uploads" + File.separator + uniquePdfFileName;
                String fullPdfPath = uploadPath + File.separator + uniquePdfFileName;
                bookPdfPart.write(fullPdfPath);
             }
@@ -121,15 +139,9 @@ public class CourseManagementServlet extends HttpServlet {
             imagePart.write(fullPath);
             course.setImagePath(filePath);
          } else {
-            List<Courses> courses = this.coursesDAO.getCoursesByPublisher(publisherId);
-            Iterator var27 = courses.iterator();
-
-            while(var27.hasNext()) {
-               Courses c = (Courses)var27.next();
-               if (c.getId() == courseId) {
-                  course.setImagePath(c.getImagePath());
-                  break;
-               }
+            Courses existingCourse = this.coursesDAO.getCourseById(courseId, publisherId);
+            if (existingCourse != null) {
+               course.setImagePath(existingCourse.getImagePath());
             }
          }
 
@@ -141,15 +153,9 @@ public class CourseManagementServlet extends HttpServlet {
             bookPdfPart.write(fullPdfPath);
             course.setBookPdfFilename(pdfFileName);
          } else {
-            List<Courses> courses = this.coursesDAO.getCoursesByPublisher(publisherId);
-            Iterator var27 = courses.iterator();
-
-            while(var27.hasNext()) {
-               Courses c = (Courses)var27.next();
-               if (c.getId() == courseId) {
-                  course.setBookPdfFilename(c.getBookPdfFilename());
-                  break;
-               }
+            Courses existingCourse = this.coursesDAO.getCourseById(courseId, publisherId);
+            if (existingCourse != null) {
+               course.setBookPdfFilename(existingCourse.getBookPdfFilename());
             }
          }
 
@@ -173,8 +179,18 @@ public class CourseManagementServlet extends HttpServlet {
    }
 
    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-      HttpSession session = request.getSession();
-      Integer publisherId = (Integer)session.getAttribute("publisherId");
+      HttpSession session = request.getSession(false);
+      String role = (String) session.getAttribute("role");
+
+      if ("ADMIN".equals(role)) {
+         List<Courses> courses = this.coursesDAO.getAllCourses();
+         System.out.println("CourseManagementServlet: Fetched " + courses.size() + " courses for admin");
+         request.setAttribute("courses", courses);
+         request.getRequestDispatcher("/admin_panel_courses.jsp").forward(request, response);
+         return;
+      }
+
+      Integer publisherId = (Integer) session.getAttribute("publisherId");
       if (publisherId == null) {
          response.sendRedirect("publisher_login.jsp");
          return;
