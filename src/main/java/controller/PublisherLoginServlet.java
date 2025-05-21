@@ -6,11 +6,13 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.*;
 import java.io.IOException;
+import java.util.UUID;
 
 @WebServlet({"/publisher_login", "/download_resume"})
 public class PublisherLoginServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private PublisherDAO publisherDao;
+    private static final String SESSION_TOKEN_COOKIE = "sessionToken";
 
     @Override
     public void init() throws ServletException {
@@ -20,7 +22,23 @@ public class PublisherLoginServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String path = request.getServletPath();
-        
+
+        // Check for session token cookie
+        if ("/publisher_login".equals(path)) {
+            String sessionToken = getCookieValue(request, SESSION_TOKEN_COOKIE);
+            if (sessionToken != null) {
+                HttpSession session = request.getSession(false);
+                if (session != null && sessionToken.equals(session.getAttribute("sessionToken"))) {
+                    String role = (String) session.getAttribute("role");
+                    if ("PUBLISHER".equals(role)) {
+                        System.out.println("PublisherLoginServlet: Valid session token found, redirecting to publisher_dashboard.jsp");
+                        response.sendRedirect(request.getContextPath() + "/publisher_dashboard.jsp");
+                        return;
+                    }
+                }
+            }
+        }
+
         if ("/download_resume".equals(path)) {
             // Handle resume download
             HttpSession session = request.getSession(false);
@@ -77,7 +95,35 @@ public class PublisherLoginServlet extends HttpServlet {
         session.setAttribute("publisherId", publisher.getId());
         session.setAttribute("resume", publisher.getResume());
         session.setAttribute("resumeFilename", publisher.getResumeFilename());
-        session.setAttribute("role", "PUBLISHER"); // Set role dynamically
+        session.setAttribute("role", "PUBLISHER");
+
+        // Generate and store session token
+        String sessionToken = UUID.randomUUID().toString();
+        session.setAttribute("sessionToken", sessionToken);
+        setSessionCookie(response, sessionToken);
+
         request.getRequestDispatcher("/publisher_dashboard.jsp").forward(request, response);
+    }
+
+    private void setSessionCookie(HttpServletResponse response, String sessionToken) {
+        Cookie cookie = new Cookie(SESSION_TOKEN_COOKIE, sessionToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(24 * 60 * 60); // 1 day expiration
+        response.addCookie(cookie);
+        System.out.println("PublisherLoginServlet: Session token cookie set - " + sessionToken);
+    }
+
+    private String getCookieValue(HttpServletRequest request, String cookieName) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookieName.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
     }
 }

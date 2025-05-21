@@ -178,8 +178,32 @@
 
     <div class="login-container">
         <h2>Publisher Login</h2>
-        <% if (request.getAttribute("error") != null) { %>
-            <p class="error"><%= request.getAttribute("error") %></p>
+        <%-- Check for existing session with cookie validation --%>
+        <%
+            HttpSession existingSession = request.getSession(false);
+            Cookie[] cookies = request.getCookies();
+            String sessionToken = null;
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if ("sessionToken".equals(cookie.getName())) {
+                        sessionToken = cookie.getValue();
+                        break;
+                    }
+                }
+            }
+            String role = (existingSession != null) ? (String) existingSession.getAttribute("role") : null;
+            String storedSessionToken = (existingSession != null) ? (String) existingSession.getAttribute("sessionToken") : null;
+
+            if (sessionToken != null && storedSessionToken != null && sessionToken.equals(storedSessionToken) && "PUBLISHER".equals(role)) {
+                response.sendRedirect(request.getContextPath() + "/publisher_dashboard.jsp");
+                return;
+            }
+
+            String error = (String) request.getAttribute("error");
+        %>
+        
+        <% if (error != null) { %>
+            <p class="error"><%= error %></p>
         <% } %>
         <form action="publisher_login" method="post">
             <div class="form-group">

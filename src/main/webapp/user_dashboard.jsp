@@ -82,13 +82,16 @@ if (successMessage != null || errorMessage != null) {
             padding: 0;
             box-sizing: border-box;
         }
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
         body {
             font-family: 'Inter', Arial, sans-serif;
             background: linear-gradient(135deg, #e6f0fa 0%, #d1e8e2 100%);
-            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            min-height: 100vh;
             padding: 20px;
         }
         .dashboard-title {
@@ -110,6 +113,9 @@ if (successMessage != null || errorMessage != null) {
             max-width: 1400px;
             width: 100%;
             margin: 0 auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
         .dashboard-header {
             display: flex;
@@ -191,6 +197,7 @@ if (successMessage != null || errorMessage != null) {
             display: grid;
             grid-template-columns: 300px 1fr;
             gap: 25px;
+            flex: 1;
         }
         .sidebar {
             background: #f9fafb;
@@ -234,6 +241,7 @@ if (successMessage != null || errorMessage != null) {
             padding: 25px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             align-self: start;
+            flex: 1;
         }
         .section-title {
             margin-top: 0;
@@ -339,34 +347,47 @@ if (successMessage != null || errorMessage != null) {
         .tab-content.active {
             display: block;
         }
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
         .course-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 20px;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+        .course-item:hover {
+            transform: translateY(-5px);
         }
         .course-item img {
-            width: 100px;
-            height: 100px;
+            width: 100%;
+            height: 150px;
             object-fit: cover;
             border-radius: 8px;
-            margin-right: 20px;
+            margin-bottom: 15px;
         }
         .course-item h4 {
-            margin: 0;
+            margin: 0 0 10px;
             color: #1a3c34;
+            font-size: 1.2rem;
         }
         .course-item p {
             margin: 5px 0;
             color: #666;
+            font-size: 0.9rem;
         }
         .course-item .button-container {
             display: flex;
-            justify-content: flex-start;
+            justify-content: space-between;
             align-items: center;
             gap: 10px;
-            margin-top: 10px;
+            margin-top: 15px;
         }
         .view-book-btn, .delete-course-btn {
             padding: 10px;
@@ -567,22 +588,22 @@ if (successMessage != null || errorMessage != null) {
                             <div class="message error"><%= errorMessage %></div>
                         <% } %>
                         <% if (enrolledCourses != null && !enrolledCourses.isEmpty()) { %>
-                            <% for (Courses course : enrolledCourses) { %>
-                                <div class="course-item">
-                                    <% 
-                                        String imagePath = null;
-                                        String courseImageSrc = "https://via.placeholder.com/100?text=Course";
-                                        try {
-                                            imagePath = course.getImagePath();
-                                            courseImageSrc = (imagePath != null && !imagePath.isEmpty()) ? 
-                                                request.getContextPath() + "/" + imagePath : 
-                                                "https://via.placeholder.com/100?text=Course";
-                                        } catch (Exception e) {
-                                            System.err.println("JSP: Error accessing course image path for course ID " + course.getId() + ": " + e.getMessage());
-                                        }
-                                    %>
-                                    <img src="<%= courseImageSrc %>" alt="<%= course.getTitle() != null ? course.getTitle() : "Course" %>">
-                                    <div>
+                            <div class="course-grid">
+                                <% for (Courses course : enrolledCourses) { %>
+                                    <div class="course-item">
+                                        <% 
+                                            String imagePath = null;
+                                            String courseImageSrc = "https://via.placeholder.com/100?text=Course";
+                                            try {
+                                                imagePath = course.getImagePath();
+                                                courseImageSrc = (imagePath != null && !imagePath.isEmpty()) ? 
+                                                    request.getContextPath() + "/" + imagePath : 
+                                                    "https://via.placeholder.com/100?text=Course";
+                                            } catch (Exception e) {
+                                                System.err.println("JSP: Error accessing course image path for course ID " + course.getId() + ": " + e.getMessage());
+                                            }
+                                        %>
+                                        <img src="<%= courseImageSrc %>" alt="<%= course.getTitle() != null ? course.getTitle() : "Course" %>">
                                         <h4><%= (course.getTitle() != null ? course.getTitle() : "Untitled Course") %></h4>
                                         <p>Instructor: <%= (course.getInstructor() != null ? course.getInstructor() : "Unknown") %></p>
                                         <p>Category: <%= (course.getCategory() != null ? course.getCategory() : "N/A") %></p>
@@ -599,8 +620,8 @@ if (successMessage != null || errorMessage != null) {
                                             </form>
                                         </div>
                                     </div>
-                                </div>
-                            <% } %>
+                                <% } %>
+                            </div>
                         <% } else { %>
                             <p>No courses enrolled yet. <a href="${pageContext.request.contextPath}/courses.jsp">Explore courses now!</a></p>
                         <% } %>

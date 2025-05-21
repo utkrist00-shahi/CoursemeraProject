@@ -6,32 +6,32 @@ response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 response.setHeader("Pragma", "no-cache");
 response.setDateHeader("Expires", 0);
 
-// Check logout
-String logout = request.getParameter("logout");
-if ("true".equals(logout)) {
-    if (session != null) {
-        session.invalidate();
+// Check for session token cookie
+Cookie[] cookies = request.getCookies();
+String sessionToken = null;
+if (cookies != null) {
+    for (Cookie cookie : cookies) {
+        if ("sessionToken".equals(cookie.getName())) {
+            sessionToken = cookie.getValue();
+            break;
+        }
     }
-    response.sendRedirect("index.jsp");
-    return;
 }
 
-// Session attributes
-String firstName = (String) session.getAttribute("firstName");
-String lastName = (String) session.getAttribute("lastName");
-String email = (String) session.getAttribute("email");
+// Validate session token
 String role = (String) session.getAttribute("role");
 Integer publisherId = (Integer) session.getAttribute("publisherId");
+String email = (String) session.getAttribute("email");
+String storedSessionToken = (String) session.getAttribute("sessionToken");
 
-// Debug session attributes
-System.out.println("publisher_dashboard.jsp: role=" + role + ", publisherId=" + publisherId + ", email=" + email + ", sessionId=" + (session != null ? session.getId() : "null"));
-
-// Redirect if not a publisher
-if (!"PUBLISHER".equals(role) || publisherId == null) {
-    System.out.println("publisher_dashboard.jsp: Unauthorized access, redirecting to publisher_login.jsp");
+if (sessionToken == null || storedSessionToken == null || !sessionToken.equals(storedSessionToken) || !"PUBLISHER".equals(role) || publisherId == null) {
+    System.out.println("publisher_dashboard.jsp: Invalid session token or unauthorized access, redirecting to publisher_login.jsp");
     response.sendRedirect("publisher_login.jsp");
     return;
 }
+
+// Debug session attributes
+System.out.println("publisher_dashboard.jsp: role=" + role + ", publisherId=" + publisherId + ", email=" + email + ", sessionId=" + (session != null ? session.getId() : "null"));
 
 // Fetch publisher's courses with null check
 CoursesDAO coursesDAO = new CoursesDAO();
@@ -461,7 +461,7 @@ if (error != null) {
             <a href="#" class="nav-link" onclick="showSection('manage-courses')">Manage Courses</a>
             <a href="#" class="nav-link" onclick="showSection('my-courses')">My Courses</a>
             <a href="#" class="nav-link" onclick="showSection('manage-profile')">Manage Profile</a>
-            <a href="?logout=true" class="logout-button">Logout</a>
+            <a href="${pageContext.request.contextPath}/logout" class="logout-button">Logout</a>
         </nav>
     </header>
 

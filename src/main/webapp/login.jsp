@@ -219,9 +219,32 @@
     <div class="login-container">
         <h2>Hi, Welcome Back!</h2>
         
-        <%-- existing session without creating new one --%>
+        <%-- Check for existing session with cookie validation --%>
         <%
             HttpSession existingSession = request.getSession(false);
+            Cookie[] cookies = request.getCookies();
+            String sessionToken = null;
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if ("sessionToken".equals(cookie.getName())) {
+                        sessionToken = cookie.getValue();
+                        break;
+                    }
+                }
+            }
+            String role = (existingSession != null) ? (String) existingSession.getAttribute("role") : null;
+            String storedSessionToken = (existingSession != null) ? (String) existingSession.getAttribute("sessionToken") : null;
+
+            if (sessionToken != null && storedSessionToken != null && sessionToken.equals(storedSessionToken)) {
+                if ("ADMIN".equals(role)) {
+                    response.sendRedirect(request.getContextPath() + "/admin_panel");
+                    return;
+                } else {
+                    response.sendRedirect(request.getContextPath() + "/index.jsp");
+                    return;
+                }
+            }
+
             String error = (String) request.getAttribute("error");
             String message = request.getParameter("message");
         %>
@@ -242,15 +265,15 @@
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" name="username" 
-                       value="<%= session.getAttribute("tempUsername") != null ? 
-                               session.getAttribute("tempUsername") : "" %>" 
+                       value="<%= (existingSession != null && existingSession.getAttribute("tempUsername") != null) ? 
+                               existingSession.getAttribute("tempUsername") : "" %>" 
                        required placeholder="Enter Username">
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
                 <input type="password" name="password" 
-                       value="<%= session.getAttribute("tempPassword") != null ? 
-                               session.getAttribute("tempPassword") : "" %>" 
+                       value="<%= (existingSession != null && existingSession.getAttribute("tempPassword") != null) ? 
+                               existingSession.getAttribute("tempPassword") : "" %>" 
                        required placeholder="Enter Your Password">
             </div>
             <% if (existingSession != null && existingSession.getAttribute("awaitingSecret") != null) { %>

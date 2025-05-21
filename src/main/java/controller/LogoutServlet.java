@@ -8,11 +8,15 @@ import java.io.IOException;
 @WebServlet("/logout")
 public class LogoutServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private static final String SESSION_TOKEN_COOKIE = "sessionToken";
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Prevent caching of secure pages
         setNoCacheHeaders(response);
+        
+        // Clear session token cookie
+        clearSessionCookie(response);
         
         // Invalidate session and clear all attributes
         invalidateSession(request);
@@ -35,6 +39,16 @@ public class LogoutServlet extends HttpServlet {
         response.setDateHeader("Expires", 0);
     }
 
+    private void clearSessionCookie(HttpServletResponse response) {
+        Cookie cookie = new Cookie(SESSION_TOKEN_COOKIE, "");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0); // Expire the cookie immediately
+        response.addCookie(cookie);
+        System.out.println("LogoutServlet: Session token cookie cleared");
+    }
+
     private void invalidateSession(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null) {
@@ -48,6 +62,7 @@ public class LogoutServlet extends HttpServlet {
                 session.removeAttribute("tempPassword");
                 session.removeAttribute("awaitingSecret");
                 session.removeAttribute("successMessage");
+                session.removeAttribute("sessionToken");
                 
                 // Clear all session attributes used in PublisherLoginServlet
                 session.removeAttribute("firstName");
