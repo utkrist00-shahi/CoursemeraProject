@@ -54,15 +54,22 @@ public class PublisherLoginServlet extends HttpServlet {
             return;
         }
 
-        // Authenticate publisher (only checks the publishers table)
-        Publisher publisher = publisherDao.getPublisherByEmail(email);
-        if (publisher == null || !publisher.getPassword().equals(password)) { // In production, use password hashing
+        // Authenticate publisher using BCrypt validation
+        if (!publisherDao.validatePublisher(email, password)) {
             request.setAttribute("error", "Invalid email or password");
             request.getRequestDispatcher("/publisher_login.jsp").forward(request, response);
             return;
         }
 
-        // If found in publishers table, proceed to dashboard
+        // Retrieve publisher details for session
+        Publisher publisher = publisherDao.getPublisherByEmail(email);
+        if (publisher == null) {
+            request.setAttribute("error", "Invalid email or password");
+            request.getRequestDispatcher("/publisher_login.jsp").forward(request, response);
+            return;
+        }
+
+        // If authentication successful, proceed to dashboard
         HttpSession session = request.getSession();
         session.setAttribute("firstName", publisher.getFirstName());
         session.setAttribute("lastName", publisher.getLastName());

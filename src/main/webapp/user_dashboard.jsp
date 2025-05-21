@@ -17,8 +17,6 @@ try {
     System.out.println("user_dashboard.jsp: Error fetching session attributes - " + e.getMessage());
 }
 
-// Since UserDashboardServlet already checks session and role, this should be safe
-// But we'll keep a minimal check for safety
 if (userId == null || role == null || !"USER".equals(role)) {
     System.out.println("user_dashboard.jsp: Invalid session - userId: " + userId + ", role: " + role + ", redirecting to login");
     response.sendRedirect(request.getContextPath() + "/login");
@@ -41,6 +39,21 @@ try {
 } catch (Exception e) {
     System.err.println("user_dashboard.jsp: Error fetching enrolled courses for userId " + userId + ": " + e.getMessage());
     request.setAttribute("error", "Failed to load enrolled courses. Please try again later.");
+}
+
+// Check for session-based messages
+String successMessage = (String) session.getAttribute("successMessage");
+String errorMessage = (String) session.getAttribute("errorMessage");
+
+// Log the error message to trace "invalid action"
+if (errorMessage != null) {
+    System.out.println("user_dashboard.jsp: Displaying error message: " + errorMessage);
+}
+
+// Clear session messages after retrieving them to prevent repeated display
+if (successMessage != null || errorMessage != null) {
+    session.removeAttribute("successMessage");
+    session.removeAttribute("errorMessage");
 }
 %>
 <!DOCTYPE html>
@@ -346,7 +359,7 @@ try {
             gap: 10px;
             margin-top: 10px;
         }
-        .view-book-btn {
+        .view-book-btn, .delete-course-btn {
             padding: 10px;
             border-radius: var(--border-radius);
             font-weight: 600;
@@ -356,12 +369,21 @@ try {
             font-size: 14px;
             text-align: center;
             box-sizing: border-box;
-            background-color: #3498db;
-            color: #fff;
             width: 120px;
             min-height: 40px;
         }
+        .view-book-btn {
+            background-color: #3498db;
+            color: #fff;
+        }
         .view-book-btn:hover {
+            transform: translateY(-2px);
+        }
+        .delete-course-btn {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+        .delete-course-btn:hover {
             transform: translateY(-2px);
         }
         .modal {
@@ -477,10 +499,6 @@ try {
                 <div id="profile" class="tab-content active">
                     <h2 class="section-title">Profile Information</h2>
                     
-                    <% 
-                        String successMessage = (String) request.getAttribute("success");
-                        String errorMessage = (String) request.getAttribute("error");
-                    %>
                     <% if (successMessage != null) { %>
                         <div class="message success"><%= successMessage %></div>
                     <% } %>
@@ -544,6 +562,11 @@ try {
                                             <% } else { %>
                                                 <p>No book available</p>
                                             <% } %>
+                                            <form action="${pageContext.request.contextPath}/payment" method="post" style="display: inline;">
+                                                <input type="hidden" name="action" value="delete">
+                                                <input type="hidden" name="courseId" value="<%= course.getId() %>">
+                                                <button type="submit" class="delete-course-btn" onclick="return confirm('Are you sure you want to unenroll from this course?')">Delete</button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>

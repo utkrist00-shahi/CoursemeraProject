@@ -12,7 +12,7 @@ import java.util.List;
 public class CoursesDAO {
 
     public boolean createCourse(Courses course) {
-        String sql = "INSERT INTO courses (title, category, instructor, price, image_path, publisher_id, book_pdf_filename) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO courses (course_title, course_category, course_instructor, course_price, course_image_path, publisher_id, course_book_pdf_filename) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, course.getTitle());
@@ -45,21 +45,21 @@ public class CoursesDAO {
             stmt.setInt(1, publisherId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                int courseId = rs.getInt("id");
+                int courseId = rs.getInt("course_id");
                 if (rs.wasNull() || courseId <= 0) {
                     System.out.println("Warning: Skipping course with invalid or null ID: " + courseId + " for publisher: " + publisherId);
                     continue;
                 }
                 Courses course = new Courses();
                 course.setId(courseId);
-                course.setTitle(rs.getString("title"));
-                course.setCategory(rs.getString("category"));
-                course.setInstructor(rs.getString("instructor"));
-                course.setPrice(rs.getDouble("price"));
-                course.setImagePath(rs.getString("image_path"));
+                course.setTitle(rs.getString("course_title"));
+                course.setCategory(rs.getString("course_category"));
+                course.setInstructor(rs.getString("course_instructor"));
+                course.setPrice(rs.getDouble("course_price"));
+                course.setImagePath(rs.getString("course_image_path"));
                 course.setPublisherId(rs.getInt("publisher_id"));
-                course.setCreatedAt(rs.getString("created_at"));
-                course.setBookPdfFilename(rs.getString("book_pdf_filename"));
+                course.setCreatedAt(rs.getString("course_created_at"));
+                course.setBookPdfFilename(rs.getString("course_book_pdf_filename"));
                 courses.add(course);
                 System.out.println("Retrieved course: ID=" + courseId + ", Title=" + course.getTitle());
             }
@@ -71,7 +71,7 @@ public class CoursesDAO {
     }
 
     public Courses getCourseById(int courseId, int publisherId) {
-        String sql = "SELECT * FROM courses WHERE id = ? AND publisher_id = ?";
+        String sql = "SELECT * FROM courses WHERE course_id = ? AND publisher_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, courseId);
@@ -79,15 +79,15 @@ public class CoursesDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 Courses course = new Courses();
-                course.setId(rs.getInt("id"));
-                course.setTitle(rs.getString("title"));
-                course.setCategory(rs.getString("category"));
-                course.setInstructor(rs.getString("instructor"));
-                course.setPrice(rs.getDouble("price"));
-                course.setImagePath(rs.getString("image_path"));
+                course.setId(rs.getInt("course_id"));
+                course.setTitle(rs.getString("course_title"));
+                course.setCategory(rs.getString("course_category"));
+                course.setInstructor(rs.getString("course_instructor"));
+                course.setPrice(rs.getDouble("course_price"));
+                course.setImagePath(rs.getString("course_image_path"));
                 course.setPublisherId(rs.getInt("publisher_id"));
-                course.setCreatedAt(rs.getString("created_at"));
-                course.setBookPdfFilename(rs.getString("book_pdf_filename"));
+                course.setCreatedAt(rs.getString("course_created_at"));
+                course.setBookPdfFilename(rs.getString("course_book_pdf_filename"));
                 return course;
             }
         } catch (SQLException e) {
@@ -97,22 +97,22 @@ public class CoursesDAO {
     }
 
     public Courses getCourseById(int courseId) {
-        String sql = "SELECT * FROM courses WHERE id = ?";
+        String sql = "SELECT * FROM courses WHERE course_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, courseId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 Courses course = new Courses();
-                course.setId(rs.getInt("id"));
-                course.setTitle(rs.getString("title"));
-                course.setCategory(rs.getString("category"));
-                course.setInstructor(rs.getString("instructor"));
-                course.setPrice(rs.getDouble("price"));
-                course.setImagePath(rs.getString("image_path"));
+                course.setId(rs.getInt("course_id"));
+                course.setTitle(rs.getString("course_title"));
+                course.setCategory(rs.getString("course_category"));
+                course.setInstructor(rs.getString("course_instructor"));
+                course.setPrice(rs.getDouble("course_price"));
+                course.setImagePath(rs.getString("course_image_path"));
                 course.setPublisherId(rs.getInt("publisher_id"));
-                course.setCreatedAt(rs.getString("created_at"));
-                course.setBookPdfFilename(rs.getString("book_pdf_filename"));
+                course.setCreatedAt(rs.getString("course_created_at"));
+                course.setBookPdfFilename(rs.getString("course_book_pdf_filename"));
                 return course;
             }
         } catch (SQLException e) {
@@ -122,7 +122,7 @@ public class CoursesDAO {
     }
 
     public boolean updateCourse(Courses course) {
-        String sql = "UPDATE courses SET title = ?, category = ?, instructor = ?, price = ?, image_path = ?, book_pdf_filename = ? WHERE id = ? AND publisher_id = ?";
+        String sql = "UPDATE courses SET course_title = ?, course_category = ?, course_instructor = ?, course_price = ?, course_image_path = ?, course_book_pdf_filename = ? WHERE course_id = ? AND publisher_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, course.getTitle());
@@ -142,7 +142,7 @@ public class CoursesDAO {
     }
 
     public boolean deleteCourse(int courseId, int publisherId) {
-        String sql = "DELETE FROM courses WHERE id = ? AND publisher_id = ?";
+        String sql = "DELETE FROM courses WHERE course_id = ? AND publisher_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, courseId);
@@ -156,7 +156,7 @@ public class CoursesDAO {
     }
 
     public boolean deleteCourse(int courseId) {
-        String sql = "DELETE FROM courses WHERE id = ?";
+        String sql = "DELETE FROM courses WHERE course_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, courseId);
@@ -170,21 +170,21 @@ public class CoursesDAO {
 
     public List<Courses> getRecentlyAddedCourses() {
         List<Courses> courses = new ArrayList<>();
-        String sql = "SELECT * FROM courses ORDER BY created_at DESC LIMIT 4";
+        String sql = "SELECT * FROM courses ORDER BY course_created_at DESC LIMIT 4";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 Courses course = new Courses();
-                course.setId(rs.getInt("id"));
-                course.setTitle(rs.getString("title"));
-                course.setCategory(rs.getString("category"));
-                course.setInstructor(rs.getString("instructor"));
-                course.setPrice(rs.getDouble("price"));
-                course.setImagePath(rs.getString("image_path"));
+                course.setId(rs.getInt("course_id"));
+                course.setTitle(rs.getString("course_title"));
+                course.setCategory(rs.getString("course_category"));
+                course.setInstructor(rs.getString("course_instructor"));
+                course.setPrice(rs.getDouble("course_price"));
+                course.setImagePath(rs.getString("course_image_path"));
                 course.setPublisherId(rs.getInt("publisher_id"));
-                course.setCreatedAt(rs.getString("created_at"));
-                course.setBookPdfFilename(rs.getString("book_pdf_filename"));
+                course.setCreatedAt(rs.getString("course_created_at"));
+                course.setBookPdfFilename(rs.getString("course_book_pdf_filename"));
                 courses.add(course);
             }
         } catch (SQLException e) {
@@ -195,22 +195,22 @@ public class CoursesDAO {
 
     public List<Courses> getEnrolledCourses(int userId) {
         List<Courses> enrolledCourses = new ArrayList<>();
-        String sql = "SELECT c.* FROM courses c JOIN bookings b ON c.id = b.course_id WHERE b.user_id = ?";
+        String sql = "SELECT c.* FROM courses c JOIN bookings b ON c.course_id = b.booking_course_id WHERE b.booking_user_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 Courses course = new Courses();
-                course.setId(rs.getInt("id"));
-                course.setTitle(rs.getString("title"));
-                course.setCategory(rs.getString("category"));
-                course.setInstructor(rs.getString("instructor"));
-                course.setPrice(rs.getDouble("price"));
-                course.setImagePath(rs.getString("image_path"));
+                course.setId(rs.getInt("course_id"));
+                course.setTitle(rs.getString("course_title"));
+                course.setCategory(rs.getString("course_category"));
+                course.setInstructor(rs.getString("course_instructor"));
+                course.setPrice(rs.getDouble("course_price"));
+                course.setImagePath(rs.getString("course_image_path"));
                 course.setPublisherId(rs.getInt("publisher_id"));
-                course.setCreatedAt(rs.getString("created_at"));
-                course.setBookPdfFilename(rs.getString("book_pdf_filename"));
+                course.setCreatedAt(rs.getString("course_created_at"));
+                course.setBookPdfFilename(rs.getString("course_book_pdf_filename"));
                 enrolledCourses.add(course);
             }
         } catch (SQLException e) {
@@ -220,14 +220,15 @@ public class CoursesDAO {
     }
 
     public boolean recordPayment(Payment payment) {
-        String sql = "INSERT INTO payments (user_id, course_id, amount, payment_date, status) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO payments (payment_id, payment_user_id, payment_course_id, payment_amount, payment_date, payment_status) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, payment.getUserId());
-            stmt.setInt(2, payment.getCourseId());
-            stmt.setDouble(3, payment.getAmount());
-            stmt.setTimestamp(4, payment.getPaymentDate());
-            stmt.setString(5, payment.getStatus());
+            stmt.setInt(1, payment.getId());
+            stmt.setInt(2, payment.getUserId());
+            stmt.setInt(3, payment.getCourseId());
+            stmt.setDouble(4, payment.getAmount());
+            stmt.setTimestamp(5, payment.getPaymentDate());
+            stmt.setString(6, payment.getStatus());
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
@@ -237,16 +238,30 @@ public class CoursesDAO {
     }
 
     public boolean recordBooking(Booking booking) {
-        String sql = "INSERT INTO bookings (user_id, course_id, booking_date) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO bookings (booking_id, booking_user_id, booking_course_id, booking_date) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, booking.getUserId());
-            stmt.setInt(2, booking.getCourseId());
-            stmt.setTimestamp(3, booking.getBookingDate());
+            stmt.setInt(1, booking.getId());
+            stmt.setInt(2, booking.getUserId());
+            stmt.setInt(3, booking.getCourseId());
+            stmt.setTimestamp(4, booking.getBookingDate());
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
             System.err.println("CoursesDAO: Error recording booking: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean deleteBooking(Booking booking) {
+        String sql = "DELETE FROM bookings WHERE booking_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, booking.getId());
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("CoursesDAO: Error deleting booking for bookingId: " + booking.getId() + ": " + e.getMessage());
             return false;
         }
     }
@@ -258,21 +273,21 @@ public class CoursesDAO {
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                int courseId = rs.getInt("id");
+                int courseId = rs.getInt("course_id");
                 if (rs.wasNull() || courseId <= 0) {
                     System.out.println("Warning: Skipping course with invalid or null ID: " + courseId);
                     continue;
                 }
                 Courses course = new Courses();
                 course.setId(courseId);
-                course.setTitle(rs.getString("title"));
-                course.setCategory(rs.getString("category"));
-                course.setInstructor(rs.getString("instructor"));
-                course.setPrice(rs.getDouble("price"));
-                course.setImagePath(rs.getString("image_path"));
+                course.setTitle(rs.getString("course_title"));
+                course.setCategory(rs.getString("course_category"));
+                course.setInstructor(rs.getString("course_instructor"));
+                course.setPrice(rs.getDouble("course_price"));
+                course.setImagePath(rs.getString("course_image_path"));
                 course.setPublisherId(rs.getInt("publisher_id"));
-                course.setCreatedAt(rs.getString("created_at"));
-                course.setBookPdfFilename(rs.getString("book_pdf_filename"));
+                course.setCreatedAt(rs.getString("course_created_at"));
+                course.setBookPdfFilename(rs.getString("course_book_pdf_filename"));
                 courses.add(course);
                 System.out.println("Retrieved course: ID=" + courseId + ", Title=" + course.getTitle());
             }
