@@ -1,12 +1,11 @@
-
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%
-// caching prevention
+// Caching prevention
 response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 response.setHeader("Pragma", "no-cache");
 response.setDateHeader("Expires", 0);
 
-// if logout occurred
+// If logout occurred
 String loggedOut = request.getParameter("loggedOut");
 if ("true".equals(loggedOut)) {
     System.out.println("about.jsp: Logout detected via query parameter, ensuring unauthenticated state");
@@ -28,16 +27,45 @@ boolean isAuthenticated = (role != null && username != null);
     <title>About Coursemera</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        :root {
+            --primary-color: #4a6bff;
+            --secondary-color: #ff6b6b;
+            --accent-color: #6bceff;
+            --dark-color: #2b2d42;
+            --light-color: #f8f9fa;
+            --text-color: #2d3436;
+            --light-text: #636e72;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f1f1f1;
-            color: #333;
+            box-sizing: border-box;
         }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--light-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
         a {
             text-decoration: none;
         }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
         /* Header */
         header {
             background-color: #fff;
@@ -181,6 +209,8 @@ boolean isAuthenticated = (role != null && username != null);
             line-height: 1.4;
             position: relative;
             z-index: 1;
+            opacity: 0;
+            animation: fadeIn 1.5s ease-in-out forwards;
         }
         .hero h2 span {
             font-weight: 800;
@@ -191,6 +221,8 @@ boolean isAuthenticated = (role != null && username != null);
             max-width: 600px;
             position: relative;
             z-index: 1;
+            opacity: 0;
+            animation: fadeIn 1.5s ease-in-out forwards 0.5s;
         }
         .hero img.team-image {
             width: 100%;
@@ -200,6 +232,10 @@ boolean isAuthenticated = (role != null && username != null);
             margin-top: 20px;
             position: relative;
             z-index: 1;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
 
         /* Our Story Section */
@@ -418,7 +454,8 @@ boolean isAuthenticated = (role != null && username != null);
             flex-direction: column;
             align-items: center;
             gap: 40px;
-            margin-bottom: 40px;
+            margin-top: auto;
+            width: 100%;
         }
         .footer-sections {
             display: flex;
@@ -654,14 +691,16 @@ boolean isAuthenticated = (role != null && username != null);
     </footer>
 
     <script>
-        // passing authentication status to JavaScript
+        // Passing authentication status to JavaScript
         const isAuthenticated = <%= isAuthenticated %>;
 
-        // Redirecting logic for unauthenticated users
+        // Redirecting logic for unauthenticated users and handling Quick Links
         document.querySelectorAll('.action-link, [data-action]').forEach(element => {
             element.addEventListener('click', (e) => {
                 e.preventDefault();
                 const action = element.getAttribute('data-action');
+                const isQuickLink = element.parentElement.parentElement.querySelector('h3')?.textContent === 'Quick Links';
+                const linkText = element.textContent.trim();
 
                 if (action === 'login') {
                     console.log('Redirecting to login.jsp');
@@ -669,6 +708,12 @@ boolean isAuthenticated = (role != null && username != null);
                 } else if (action === 'publisher-login') {
                     console.log('Redirecting to publisher_login.jsp');
                     window.location.href = 'publisher_login.jsp';
+                } else if (isQuickLink && linkText === 'About us') {
+                    console.log('Refreshing about.jsp for About us link');
+                    window.location.reload();
+                } else if (isQuickLink && (linkText === 'Certified Instructors' || linkText === 'Contact')) {
+                    console.log('Redirecting to about.jsp for ' + linkText);
+                    window.location.href = 'about.jsp';
                 } else if (!isAuthenticated) {
                     console.log('Unauthenticated user, redirecting to login.jsp');
                     window.location.href = 'login.jsp';

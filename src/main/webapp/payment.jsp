@@ -223,42 +223,54 @@ if (course == null) {
 </head>
 <body>
     <div class="payment-container">
-        <h2 class="payment-title">Payment for Course</h2>
+        <h2 class="payment-title"><i class="fas fa-credit-card"></i> Payment for Course</h2>
 
         <% 
             String successMessage = (String) request.getAttribute("success");
             String errorMessage = (String) request.getAttribute("error");
         %>
         <% if (successMessage != null) { %>
-            <div class="message success"><%= successMessage %></div>
+            <div class="message success"><i class="fas fa-check-circle"></i> <%= successMessage %></div>
         <% } %>
         <% if (errorMessage != null) { %>
-            <div class="message error"><%= errorMessage %></div>
+            <div class="message error"><i class="fas fa-exclamation-circle"></i> <%= errorMessage %></div>
         <% } %>
 
         <div class="course-info">
             <h3><%= course.getTitle() != null ? course.getTitle() : "Course Title" %></h3>
-            <p>Instructor: <%= course.getInstructor() != null ? course.getInstructor() : "Unknown" %></p>
-            <p>Price: $<%= String.format("%.2f", course.getPrice()) %></p>
+            <p><i class="fas fa-chalkboard-teacher"></i> Instructor: <%= course.getInstructor() != null ? course.getInstructor() : "Unknown" %></p>
+            <p><i class="fas fa-dollar-sign"></i> Price: $<%= String.format("%.2f", course.getPrice()) %></p>
         </div>
 
         <form class="payment-form" action="${pageContext.request.contextPath}/payment" method="post">
             <input type="hidden" name="courseId" value="<%= course.getId() %>">
             <input type="hidden" name="amount" value="<%= course.getPrice() %>">
 
-            <label for="cardNumber">Card Number</label>
-            <input type="text" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456" required>
+            <div class="form-group">
+                <label for="cardNumber"><i class="fas fa-credit-card"></i> Card Number</label>
+                <input type="text" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456" required>
+                <i class="fas fa-credit-card"></i>
+            </div>
 
-            <label for="expiryDate">Expiry Date</label>
-            <input type="text" id="expiryDate" name="expiryDate" placeholder="MM/YY" required>
+            <div class="form-group">
+                <label for="expiryDate"><i class="fas fa-calendar-alt"></i> Expiry Date</label>
+                <input type="text" id="expiryDate" name="expiryDate" placeholder="MM/YY" required>
+                <i class="fas fa-calendar-alt"></i>
+            </div>
 
-            <label for="cvv">CVV</label>
-            <input type="text" id="cvv" name="cvv" placeholder="123" required>
+            <div class="form-group">
+                <label for="cvv"><i class="fas fa-lock"></i> CVV</label>
+                <input type="text" id="cvv" name="cvv" placeholder="123" required>
+                <i class="fas fa-lock"></i>
+            </div>
 
-            <label for="amount">Amount ($)</label>
-            <input type="text" id="amount" name="amountDisplay" value="<%= String.format("%.2f", course.getPrice()) %>" readonly>
+            <div class="form-group">
+                <label for="amount"><i class="fas fa-dollar-sign"></i> Amount ($)</label>
+                <input type="text" id="amount" name="amountDisplay" value="<%= String.format("%.2f", course.getPrice()) %>" readonly>
+                <i class="fas fa-dollar-sign"></i>
+            </div>
 
-            <button type="submit">Pay Now</button>
+            <button type="submit"><i class="fas fa-arrow-right"></i> Pay Now</button>
         </form>
     </div>
 

@@ -65,16 +65,16 @@ if (error != null) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         :root {
-            --primary-color: #4a6bff;
-            --secondary-color: #ff6b6b;
-            --accent-color: #6bceff;
-            --dark-color: #2b2d42;
-            --light-color: #f8f9fa;
-            --text-color: #2d3436;
-            --light-text: #636e72;
-            --border-radius: 8px;
-            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
+            --primary-color: #005f73;
+            --secondary-color: #0a9396;
+            --accent-color: #94d2bd;
+            --dark-color: #001219;
+            --light-color: #f8fafc;
+            --text-color: #1e293b;
+            --light-text: #64748b;
+            --border-radius: 6px;
+            --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            --transition: all 0.2s ease;
         }
 
         * {
@@ -83,164 +83,190 @@ if (error != null) {
             box-sizing: border-box;
         }
 
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: var(--light-color);
+            background: #f1f5f9;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            color: var(--text-color);
+            line-height: 1.5;
         }
 
-        .container {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 0 24px;
+        .dashboard-container {
+            width: 100vw;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
         }
 
         header {
-            background-color: #fff;
-            padding: 20px 40px;
+            background: #ffffff;
+            padding: 20px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: var(--box-shadow);
         }
+
+        header .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        header .logo {
+            width: 48px;
+            height: 48px;
+        }
+
         header h1 {
-            font-size: 24px;
-            margin: 0;
-            background: linear-gradient(135deg, #3498db, #1e90ff);
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--dark-color);
+           background: linear-gradient(135deg, #3498db, #1e90ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            margin:0
         }
+
         header nav {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 12px;
         }
+
         header nav a {
-            color: #666;
-            font-size: 16px;
-            position: relative;
-            transition: color 0.3s ease;
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
             text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: var(--transition);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        header nav a:hover {
-            color: #333;
-        }
+
         header nav a.nav-link {
-            background: linear-gradient(135deg, #3498db, #1e6bb8);
-            color: #fff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
+            background: var(--primary-color);
         }
+
         header nav a.nav-link:hover {
-            background: linear-gradient(135deg, #4aa3e8, #2b82d1);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            transform: scale(1.05);
+            background: var(--secondary-color);
         }
+
         header nav a.logout-button {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: #fff;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
+            background: #dc2626;
         }
+
         header nav a.logout-button:hover {
-            background: linear-gradient(135deg, #ff6655, #e74c3c);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            transform: scale(1.05);
-        }
-        .logo {
-            width: 80px;
-            height: 80px;
+            background: #b91c1c;
         }
 
         .main-content {
             flex: 1;
-            padding: 40px 20px;
+            padding: 24px;
+            overflow-y: auto;
+            background: #ffffff;
         }
 
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .section-title {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0;
+            padding-bottom: 8px;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: var(--primary-color);
         }
 
         .course-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
         }
 
         .course-card {
-            background: white;
+            background: #ffffff;
             border-radius: var(--border-radius);
             overflow: hidden;
             box-shadow: var(--box-shadow);
             transition: var(--transition);
-            position: relative;
         }
 
         .course-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .course-image {
             width: 100%;
-            height: 160px;
+            height: 120px;
             object-fit: cover;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
         }
 
         .course-content {
-            padding: 16px;
+            padding: 12px;
         }
 
         .course-category {
-            font-size: 12px;
+            font-size: 0.75rem;
             color: var(--primary-color);
             font-weight: 600;
             margin-bottom: 8px;
         }
 
         .course-title {
-            font-size: 18px;
-            font-weight: 700;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--dark-color);
             margin-bottom: 8px;
         }
 
         .course-instructor {
-            font-size: 14px;
+            font-size: 0.75rem;
             color: var(--light-text);
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         .course-meta {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         .course-price {
-            font-weight: 700;
+            font-weight: 600;
             color: var(--dark-color);
+            font-size: 0.875rem;
         }
 
         .course-rating {
@@ -250,28 +276,35 @@ if (error != null) {
         }
 
         .stars {
-            color: #ffc107;
+            color: #f59e0b;
+            font-size: 0.75rem;
         }
 
         .rating-count {
-            font-size: 12px;
+            font-size: 0.75rem;
             color: var(--light-text);
         }
 
+        .course-card p {
+            font-size: 0.75rem;
+            color: var(--light-text);
+            margin-bottom: 8px;
+        }
+
         .edit-form, .upload-form, .profile-form {
-            display: block;
             padding: 16px;
-            background: #f0f4ff;
+            background: #f8fafc;
             border-radius: var(--border-radius);
-            margin-bottom: 20px;
-            position: relative;
+            margin-bottom: 16px;
+            border: 1px solid #e2e8f0;
         }
 
         .edit-form label, .upload-form label, .profile-form label {
             display: block;
-            margin: 5px 0 2px;
-            font-size: 14px;
+            margin: 4px 0;
+            font-size: 0.875rem;
             color: var(--text-color);
+            font-weight: 500;
         }
 
         .edit-form input[type="text"],
@@ -284,190 +317,272 @@ if (error != null) {
         .profile-form input[type="file"] {
             width: 100%;
             padding: 8px;
-            margin: 5px 0;
-            border: 1px solid #ccc;
+            margin-bottom: 8px;
+            border: 1px solid #d1d5db;
             border-radius: var(--border-radius);
-            box-sizing: border-box;
+            font-size: 0.875rem;
+            transition: var(--transition);
+        }
+
+        .edit-form input:focus,
+        .upload-form input:focus,
+        .profile-form input:focus {
+            border-color: var(--primary-color);
+            outline: none;
         }
 
         .edit-form img {
-            max-width: 100px;
-            max-height: 100px;
-            margin: 5px 0;
+            max-width: 80px;
+            max-height: 80px;
+            margin: 4px 0;
             border-radius: var(--border-radius);
         }
 
         .profile-form .profile-pic-container {
-            position: absolute;
-            top: 16px;
-            right: 16px;
+            margin-bottom: 12px;
         }
 
         .profile-form img {
-            width: 120px;
-            height: 120px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid var(--primary-color);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .profile-form .no-pic {
-            width: 120px;
-            height: 120px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            background-color: #e0e0e0;
+            background: #e2e8f0;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #666;
-            font-size: 14px;
+            color: var(--light-text);
+            font-size: 0.75rem;
         }
 
-        .edit-btn, .delete-btn, .save-btn, .cancel-btn, .upload-btn {
-            padding: 10px;
+        .profile-details {
+            margin-bottom: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .profile-details .profile-pic-container {
+            flex: 0 0 auto;
+        }
+
+        .profile-details .details-text {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .profile-details p {
+            font-size: 0.875rem;
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+
+        .profile-details a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .profile-details a:hover {
+            text-decoration: underline;
+        }
+
+        .edit-btn,.ConcurrentModificationException .delete-btn, .save-btn, .cancel-btn, .upload-btn {
+            padding: 8px 16px;
             border-radius: var(--border-radius);
-            font-weight: 600;
+            font-weight: 500;
             border: none;
             cursor: pointer;
             transition: var(--transition);
-            font-size: 14px;
+            font-size: 0.875rem;
             text-align: center;
-            box-sizing: border-box;
-            min-height: 40px;
-            width: 100%;
+            min-height: 32px;
         }
 
         .button-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 8px;
         }
 
         .edit-btn {
-            background: #f1c40f;
+            background: var(--primary-color);
             color: #fff;
         }
 
+        .edit-btn:hover {
+            background: var(--secondary-color);
+        }
+
         .delete-btn {
-            background: #e74c3c;
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.875rem;
+            text-align: center;
+            min-height: 32px;
+            background: #dc2626;
             color: #fff;
+        }
+
+        .delete-btn:hover {
+            background: #b91c1c;
         }
 
         .save-btn, .upload-btn {
             background: var(--primary-color);
-            color: white;
+            color: #fff;
+        }
+
+        .save-btn:hover, .upload-btn:hover {
+            background: var(--secondary-color);
         }
 
         .cancel-btn {
-            background: #ccc;
-            color: black;
+            background: #e2e8f0;
+            color: var(--text-color);
         }
 
-        .edit-btn:hover, .delete-btn:hover, .save-btn:hover, .cancel-btn:hover, .upload-btn:hover {
-            transform: translateY(-2px);
+        .cancel-btn:hover {
+            background: #d1d5db;
         }
 
         .error {
-            color: #e74c3c;
-            font-size: 14px;
+            color: #dc2626;
+            font-size: 0.875rem;
             text-align: center;
-            margin: 10px 0;
+            margin: 8px 0;
+            padding: 8px;
+            background: #fef2f2;
+            border: 1px solid #f87171;
+            border-radius: var(--border-radius);
         }
 
         .message {
-            color: #27ae60;
-            font-size: 14px;
+            color: #065f46;
+            font-size: 0.875rem;
             text-align: center;
-            margin: 10px 0;
+            margin: 8px 0;
+            padding: 8px;
+            background: #ecfdf5;
+            border: 1px solid #6ee7b7;
+            border-radius: var(--border-radius);
         }
 
         footer {
-            background-color: #1a1a1a;
-            color: #fff;
-            padding: 60px 40px;
+            background: var(--dark-color);
+            color: var(--light-color);
+            padding: 40px 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 40px;
-            margin-top: auto;
+            gap: 24px;
         }
+
         .footer-sections {
             display: flex;
-            gap: 40px;
+            gap: 32px;
             flex-wrap: wrap;
             justify-content: center;
         }
+
         .footer-section {
-            min-width: 200px;
+            min-width: 160px;
         }
+
         .footer-section h3 {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--light-color);
         }
+
         .footer-section p, .footer-section a {
-            font-size: 14px;
-            color: #ccc;
-            margin: 0 0 10px;
+            font-size: 0.875rem;
+            color: var(--light-text);
+            margin: 0 0 8px;
+            text-decoration: none;
         }
+
         .footer-section a:hover {
-            color: #fff;
+            color: var(--accent-color);
         }
+
         .footer-section .social-links {
             display: flex;
-            gap: 15px;
+            gap: 12px;
         }
+
         .footer-section .social-links a {
-            font-size: 18px;
+            font-size: 1rem;
+            color: var(--light-text);
         }
+
+        .footer-section .social-links a:hover {
+            color: var(--accent-color);
+        }
+
         .footer-copyright {
-            font-size: 14px;
-            color: #ccc;
+            font-size: 0.875rem;
+            color: var(--light-text);
             text-align: center;
         }
 
         @media (max-width: 768px) {
             header {
                 flex-direction: column;
-                gap: 16px;
+                gap: 12px;
+                padding: 16px;
             }
             header nav {
                 width: 100%;
                 justify-content: center;
                 flex-wrap: wrap;
+                gap: 8px;
             }
-            .profile-form .profile-pic-container {
-                position: static;
-                text-align: center;
-                margin-bottom: 20px;
+            .main-content {
+                padding: 16px;
             }
-            .profile-form img, .profile-form .no-pic {
-                margin: 0 auto;
+            .course-grid {
+                grid-template-columns: 1fr;
+            }
+            .profile-details {
+                flex-direction: column;
+            }
+            .profile-details .profile-pic-container {
+                margin: 0 auto 12px;
             }
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="flex items-center">
-            <img src="logo.png" alt="Coursemera Logo" class="logo">
-            <h1>Coursemera</h1>
-        </div>
-        <nav>
-            <a href="#" class="nav-link" onclick="showSection('manage-courses')">Manage Courses</a>
-            <a href="#" class="nav-link" onclick="showSection('my-courses')">My Courses</a>
-            <a href="#" class="nav-link" onclick="showSection('manage-profile')">Manage Profile</a>
-            <a href="${pageContext.request.contextPath}/logout" class="logout-button">Logout</a>
-        </nav>
-    </header>
+    <div class="dashboard-container">
+        <header>
+            <div class="logo-container">
+                <img src="logo.png" alt="Coursemera Logo" class="logo">
+                <h1>Coursemera</h1>
+            </div>
+            <nav>
+                <a href="#" class="nav-link" onclick="showSection('manage-courses')"><i class="fas fa-plus"></i> Manage Courses</a>
+                <a href="#" class="nav-link" onclick="showSection('my-courses')"><i class="fas fa-book"></i> My Courses</a>
+                <a href="#" class="nav-link" onclick="showSection('manage-profile')"><i class="fas fa-user"></i> Manage Profile</a>
+                <a href="${pageContext.request.contextPath}/logout" class="logout-button"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </nav>
+        </header>
 
-    <div class="main-content">
-        <section id="manage-courses" class="courses-section">
-            <div class="container">
+        <div class="main-content">
+            <section id="manage-courses" class="courses-section">
                 <div class="section-header">
                     <h2 class="section-title">Manage Courses</h2>
                 </div>
@@ -493,17 +608,15 @@ if (error != null) {
                         <input type="file" id="image" name="image" accept="image/*" required>
                         <label for="bookPdf">Book PDF (optional):</label>
                         <input type="file" id="bookPdf" name="bookPdf" accept="application/pdf">
-                        <div style="display: flex; gap: 8px;">
+                        <div class="button-container">
                             <button type="submit" class="upload-btn">Upload</button>
                             <button type="reset" class="cancel-btn">Reset</button>
                         </div>
                     </form>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section id="my-courses" class="courses-section" style="display: none;">
-            <div class="container">
+            <section id="my-courses" class="courses-section" style="display: none;">
                 <div class="section-header">
                     <h2 class="section-title">My Courses</h2>
                 </div>
@@ -523,14 +636,13 @@ if (error != null) {
                                         String courseIdStr = String.valueOf(courseId);
                                         String imagePath = course.getImagePath() != null && !course.getImagePath().isEmpty() ? 
                                             request.getContextPath() + "/" + course.getImagePath() : 
-                                            "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
-                                        // Safely extract the filename from book_pdf_filename
+                                            "https://via.placeholder.com/100?text=Course";
                                         String pdfDisplayName = "Not uploaded";
                                         if (course.getBookPdfFilename() != null && !course.getBookPdfFilename().isEmpty()) {
                                             try {
                                                 pdfDisplayName = Paths.get(course.getBookPdfFilename()).getFileName().toString();
                                             } catch (Exception e) {
-                                                pdfDisplayName = course.getBookPdfFilename(); // Fallback to raw value
+                                                pdfDisplayName = course.getBookPdfFilename();
                                                 System.err.println("Error parsing PDF filename for course ID " + courseId + ": " + e.getMessage());
                                             }
                                         }
@@ -584,7 +696,7 @@ if (error != null) {
                                     <% } else { %>
                                         <p>Current Book PDF: Not uploaded</p>
                                     <% } %>
-                                    <div style="display: flex; gap: 8px;">
+                                    <div class="button-container">
                                         <button type="submit" class="save-btn">Save</button>
                                         <button type="button" class="cancel-btn" onclick="toggleEditForm('<%= courseIdStr %>')">Cancel</button>
                                     </div>
@@ -604,11 +716,9 @@ if (error != null) {
                         <p class="error">No courses found.</p>
                     <% } %>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section id="manage-profile" class="courses-section" style="display: none;">
-            <div class="container">
+            <section id="manage-profile" class="courses-section" style="display: none;">
                 <div class="section-header">
                     <h2 class="section-title">Manage Profile</h2>
                 </div>
@@ -619,18 +729,20 @@ if (error != null) {
                     <p class="error"><%= error %></p>
                 <% } %>
                 <div class="profile-form">
-                    <div class="profile-pic-container">
-                        <% if (publisher != null && publisher.getProfilePicture() != null) { %>
-                            <img src="data:image/jpeg;base64,<%= java.util.Base64.getEncoder().encodeToString(publisher.getProfilePicture()) %>" alt="Profile Picture">
-                        <% } else { %>
-                            <div class="no-pic">No Image</div>
-                        <% } %>
-                    </div>
                     <div class="profile-details">
-                        <p><strong>First Name:</strong> <%= publisher != null && publisher.getFirstName() != null ? publisher.getFirstName() : "Not set" %></p>
-                        <p><strong>Last Name:</strong> <%= publisher != null && publisher.getLastName() != null ? publisher.getLastName() : "Not set" %></p>
-                        <p><strong>Email:</strong> <%= publisher != null && publisher.getEmail() != null ? publisher.getEmail() : "Not set" %></p>
-                        <p><strong>Resume:</strong> <%= publisher != null && publisher.getResumeFilename() != null ? "<a href='download_resume?publisherId=" + publisherId + "' target='_blank'>" + publisher.getResumeFilename() + "</a>" : "No resume uploaded." %></p>
+                        <div class="profile-pic-container">
+                            <% if (publisher != null && publisher.getProfilePicture() != null) { %>
+                                <img src="data:image/jpeg;base64,<%= java.util.Base64.getEncoder().encodeToString(publisher.getProfilePicture()) %>" alt="Profile Picture">
+                            <% } else { %>
+                                <div class="no-pic">No Image</div>
+                            <% } %>
+                        </div>
+                        <div class="details-text">
+                            <p><strong>First Name:</strong> <%= publisher != null && publisher.getFirstName() != null ? publisher.getFirstName() : "Not set" %></p>
+                            <p><strong>Last Name:</strong> <%= publisher != null && publisher.getLastName() != null ? publisher.getLastName() : "Not set" %></p>
+                            <p><strong>Email:</strong> <%= publisher != null && publisher.getEmail() != null ? publisher.getEmail() : "Not set" %></p>
+                            <p><strong>Resume:</strong> <%= publisher != null && publisher.getResumeFilename() != null ? "<a href='download_resume?publisherId=" + publisherId + "' target='_blank'>" + publisher.getResumeFilename() + "</a>" : "No resume uploaded." %></p>
+                        </div>
                     </div>
                     <form action="${pageContext.request.contextPath}/ProfileManagementServlet" method="post" enctype="multipart/form-data" onsubmit="return validateProfileForm(this)">
                         <input type="hidden" name="action" value="update">
@@ -650,45 +762,19 @@ if (error != null) {
                         <% } else { %>
                             <p>Current Resume: Not uploaded</p>
                         <% } %>
-                        <div style="display: flex; gap: 8px;">
+                        <div class="button-container">
                             <button type="submit" class="save-btn">Save Changes</button>
                             <button type="reset" class="cancel-btn">Reset</button>
                         </div>
                     </form>
                 </div>
-            </div>
-        </section>
-    </div>
+            </section>
+        </div>
 
+ <!-- Footer -->
     <footer>
-        <div class="footer-sections">
-            <div class="footer-section">
-                <h3>CourseMera</h3>
-                <p>Learn from the best instructors worldwide</p>
-            </div>
-            <div class="footer-section">
-                <h3>Quick Links</h3>
-                <p><a href="about.jsp">About us</a></p>
-                <p><a href="#">Certified Instructors</a></p>
-                <p><a href="#">Contact</a></p>
-            </div>
-            <div class="footer-section">
-                <h3>Contact Info</h3>
-                <p>Email us today</p>
-            </div>
-            <div class="footer-section">
-                <h3>Follow Us</h3>
-                <div class="social-links">
-                    <a href="#"><i class="fab fa-facebook"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                </div>
-            </div>
-        </div>
-        <div class="footer-copyright">
-            © 2025 CourseMera. All rights reserved.
-        </div>
-    </footer>
+        <p>© 2025 CourseMera. All rights reserved.</p>
+    </footer>    </div>
 
     <script>
         function showSection(sectionId) {
@@ -761,7 +847,7 @@ if (error != null) {
                     alert('Price must be a non-negative number.');
                     return false;
                 }
-                if (bookPdf && bookPdf.size > 10 * 1024 * 1024) { // 10MB limit
+                if (bookPdf && bookPdf.size > 10 * 1024 * 1024) {
                     alert('Book PDF must be less than 10MB.');
                     return false;
                 }
@@ -802,7 +888,7 @@ if (error != null) {
                     alert('An image is required for new courses.');
                     return false;
                 }
-                if (bookPdf && bookPdf.size > 10 * 1024 * 1024) { // 10MB limit
+                if (bookPdf && bookPdf.size > 10 * 1024 * 1024) {
                     alert('Book PDF must be less than 10MB.');
                     return false;
                 }
@@ -834,11 +920,11 @@ if (error != null) {
                     alert('Email is required.');
                     return false;
                 }
-                if (profilePicture && profilePicture.size > 2 * 1024 * 1024) { // 2MB limit
+                if (profilePicture && profilePicture.size > 2 * 1024 * 1024) {
                     alert('Profile picture must be less than 2MB.');
                     return false;
                 }
-                if (resume && resume.size > 5 * 1024 * 1024) { // 5MB limit for resume
+                if (resume && resume.size > 5 * 1024 * 1024) {
                     alert('Resume must be less than 5MB.');
                     return false;
                 }

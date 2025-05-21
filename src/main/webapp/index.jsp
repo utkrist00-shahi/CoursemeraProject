@@ -1,7 +1,6 @@
-
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%
-//  caching prevention
+// Caching prevention
 response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 response.setHeader("Pragma", "no-cache");
 response.setDateHeader("Expires", 0);
@@ -10,7 +9,6 @@ response.setDateHeader("Expires", 0);
 String loggedOut = request.getParameter("loggedOut");
 if ("true".equals(loggedOut)) {
     System.out.println("index.jsp: Logout detected via query parameter, ensuring unauthenticated state");
-    // Using the implicit session variable
     if (session != null) {
         session.invalidate();
     }
@@ -29,16 +27,45 @@ boolean isAuthenticated = (role != null && username != null);
     <title>Coursemera</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        :root {
+            --primary-color: #4a6bff;
+            --secondary-color: #ff6b6b;
+            --accent-color: #6bceff;
+            --dark-color: #2b2d42;
+            --light-color: #f8f9fa;
+            --text-color: #2d3436;
+            --light-text: #636e72;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f1f1f1;
-            color: #333;
+            box-sizing: border-box;
         }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--light-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
         a {
             text-decoration: none;
         }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
         /* Header */
         header {
             background-color: #fff;
@@ -54,7 +81,7 @@ boolean isAuthenticated = (role != null && username != null);
             background: linear-gradient(135deg, #3498db, #1e90ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); 
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
         }
         header nav {
             display: flex;
@@ -70,7 +97,6 @@ boolean isAuthenticated = (role != null && username != null);
         header nav a:hover {
             color: #333;
         }
-        /* Home button */
         header nav a.nav-home {
             font-weight: 600;
         }
@@ -78,7 +104,6 @@ boolean isAuthenticated = (role != null && username != null);
             color: #3498db;
             border-bottom: 2px solid #3498db;
         }
-        /* Courses and About links */
         header nav a.nav-link {
             font-weight: 600;
         }
@@ -89,7 +114,10 @@ boolean isAuthenticated = (role != null && username != null);
             background-repeat: no-repeat;
             background-position: bottom;
         }
-        /* Login button */
+        header nav a.nav-link.active {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+        }
         header nav a.login-button {
             background: linear-gradient(135deg, #444, #222);
             color: #fff;
@@ -103,7 +131,6 @@ boolean isAuthenticated = (role != null && username != null);
             background: linear-gradient(135deg, #555, #333);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
-        /* User info */
         header nav .user-info {
             display: flex;
             align-items: center;
@@ -124,7 +151,6 @@ boolean isAuthenticated = (role != null && username != null);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             transform: scale(1.05);
         }
-        /* Logout button */
         header nav a.logout-button {
             background: linear-gradient(135deg, #e74c3c, #c0392b);
             color: #fff;
@@ -139,7 +165,6 @@ boolean isAuthenticated = (role != null && username != null);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             transform: scale(1.05);
         }
-        /* Publisher button */
         .publisher-button {
             background: linear-gradient(135deg, #3498db, #1e6bb8);
             color: #fff;
@@ -155,12 +180,16 @@ boolean isAuthenticated = (role != null && username != null);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             transform: scale(1.05);
         }
+        .logo {
+            width: 80px;
+            height: 80px;
+        }
 
         /* Hero Section */
         .hero {
-            background: url('https://images.unsplash.com/photo-1532618500676-2e0cbf7ba8b8?q=80&w=1420&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D/1920x400') no-repeat center center/cover;
+            background: url('https://images.unsplash.com/photo-1532618500676-2e0cbf7ba8b8?q=80&w=1420&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D/1920x600') no-repeat center center/cover;
             text-align: center;
-            padding: 60px 20px;
+            padding: 80px 20px;
             color: #fff;
             position: relative;
             margin-bottom: 40px;
@@ -180,9 +209,20 @@ boolean isAuthenticated = (role != null && username != null);
             line-height: 1.4;
             position: relative;
             z-index: 1;
+            opacity: 0;
+            animation: fadeIn 1.5s ease-in-out forwards;
         }
         .hero h2 span {
             font-weight: 800;
+        }
+        .hero p {
+            font-size: 18px;
+            margin: 0 auto 20px;
+            max-width: 600px;
+            position: relative;
+            z-index: 1;
+            opacity: 0;
+            animation: fadeIn 1.5s ease-in-out forwards 0.5s;
         }
         .hero a.browse-courses-button {
             background: linear-gradient(135deg, #333, #555);
@@ -190,7 +230,7 @@ boolean isAuthenticated = (role != null && username != null);
             padding: 12px 24px;
             border-radius: 20px;
             font-size: 16px;
-            font relief: 600;
+            font-weight: 600;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             position: relative;
             z-index: 1;
@@ -201,19 +241,23 @@ boolean isAuthenticated = (role != null && username != null);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             transform: scale(1.05);
         }
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
 
-        /* Featured Courses */
+        /* Courses */
         .courses {
             padding: 60px 40px;
             text-align: center;
             margin-bottom: 40px;
-            background-color: #f1f1f1; 
+            background-color: #f1f1f1;
         }
         .courses h2 {
             font-size: 24px;
             font-weight: bold;
             margin-bottom: 30px;
-            color: #333; 
+            color: #333;
         }
         .course-grid {
             display: flex;
@@ -243,7 +287,7 @@ boolean isAuthenticated = (role != null && username != null);
             font-size: 18px;
             font-weight: bold;
             margin: 0 0 10px;
-            color: #333; 
+            color: #333;
         }
         .course-card p {
             font-size: 14px;
@@ -279,7 +323,7 @@ boolean isAuthenticated = (role != null && username != null);
             font-size: 24px;
             font-weight: bold;
             margin-bottom: 30px;
-            color: #333; 
+            color: #333;
         }
         .steps {
             display: flex;
@@ -306,7 +350,7 @@ boolean isAuthenticated = (role != null && username != null);
             font-size: 16px;
             font-weight: bold;
             margin: 0 0 10px;
-            color: #333; 
+            color: #333;
         }
         .step p {
             font-size: 14px;
@@ -314,7 +358,7 @@ boolean isAuthenticated = (role != null && username != null);
             margin: 0;
         }
 
-        /* Why Choose Coursemera */
+        /* Features */
         .features {
             padding: 80px 40px;
             background: white;
@@ -376,7 +420,7 @@ boolean isAuthenticated = (role != null && username != null);
             display: block;
         }
 
-        /* Testimonial Section */
+        /* Testimonials */
         .testimonials {
             padding: 60px 40px;
             text-align: center;
@@ -387,7 +431,7 @@ boolean isAuthenticated = (role != null && username != null);
             font-size: 24px;
             font-weight: bold;
             margin-bottom: 30px;
-            color: #333; 
+            color: #333;
         }
         .testimonial-wrapper {
             display: flex;
@@ -465,7 +509,8 @@ boolean isAuthenticated = (role != null && username != null);
             flex-direction: column;
             align-items: center;
             gap: 40px;
-            margin-bottom: 40px;
+            margin-top: auto;
+            width: 100%;
         }
         .footer-sections {
             display: flex;
@@ -480,7 +525,7 @@ boolean isAuthenticated = (role != null && username != null);
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 15px;
-            color: #fff; 
+            color: #fff;
         }
         .footer-section p, .footer-section a {
             font-size: 14px;
@@ -501,10 +546,6 @@ boolean isAuthenticated = (role != null && username != null);
             font-size: 14px;
             color: #ccc;
             text-align: center;
-        }
-        .logo {
-            width: 80px;
-            height: 80px;
         }
     </style>
 </head>
@@ -527,7 +568,7 @@ boolean isAuthenticated = (role != null && username != null);
                 } else if ("USER".equals(role)) {
                     System.out.println("index.jsp: User session detected, displaying authenticated navbar for USER");
             %>
-                    <a href="index.jsp" class="nav-home">Home</a>
+                    <a href="index.jsp" class="nav-home active">Home</a>
                     <a href="courses.jsp" class="nav-link">courses</a>
                     <a href="about.jsp" class="nav-link">about</a>
                     <a href="${pageContext.request.contextPath}/user_dashboard" class="user-info">
@@ -553,7 +594,8 @@ boolean isAuthenticated = (role != null && username != null);
 
     <!-- Hero Section -->
     <section class="hero">
-        <h2>Learn from the best<br><span>Anytime, Anywhere.</span></h2>
+        <h2>Explore our courses<br><span>Learn Anything, Anytime</span></h2>
+        <p>Discover a world of knowledge with our diverse range of courses taught by industry experts.</p>
         <a href="#" class="browse-courses-button action-link">Browse courses</a>
     </section>
 
@@ -561,7 +603,6 @@ boolean isAuthenticated = (role != null && username != null);
     <section class="courses">
         <h2>Featured Courses</h2>
         <div class="course-grid">
-            <!-- Course 1 -->
             <div class="course-card">
                 <img src="https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Web Development Basics">
                 <h3>Web Development Basics</h3>
@@ -571,7 +612,6 @@ boolean isAuthenticated = (role != null && username != null);
                     <a href="#" class="action-link">preview</a>
                 </div>
             </div>
-            <!-- Course 2 -->
             <div class="course-card">
                 <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1415&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1w974fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Digital Marketing">
                 <h3>Digital Marketing</h3>
@@ -581,7 +621,6 @@ boolean isAuthenticated = (role != null && username != null);
                     <a href="#" class="action-link">preview</a>
                 </div>
             </div>
-            <!-- Course 3 -->
             <div class="course-card">
                 <img src="https://images.unsplash.com/photo-1666875753105-c63a6f3bdc86?q=80&w=1473&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Data Science Essentials">
                 <h3>Data Science Essentials</h3>
@@ -591,7 +630,6 @@ boolean isAuthenticated = (role != null && username != null);
                     <a href="#" class="action-link">preview</a>
                 </div>
             </div>
-            <!-- Course 4 -->
             <div class="course-card">
                 <img src="https://plus.unsplash.com/premium_photo-1683121710572-7723bd2e235d?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Machine Learning Fundamentals">
                 <h3>Machine Learning Fundamentals</h3>
@@ -601,7 +639,6 @@ boolean isAuthenticated = (role != null && username != null);
                     <a href="#" class="action-link">preview</a>
                 </div>
             </div>
-            <!-- Course 5 -->
             <div class="course-card">
                 <img src="https://images.unsplash.com/photo-1572044162444-ad60f128bdea?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Graphic Design Mastery">
                 <h3>Graphic Design Mastery</h3>
@@ -611,7 +648,6 @@ boolean isAuthenticated = (role != null && username != null);
                     <a href="#" class="action-link">preview</a>
                 </div>
             </div>
-            <!-- Course 6 -->
             <div class="course-card">
                 <img src="https://images.unsplash.com/photo-1614064548237-096f735f344f?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Cybersecurity Basics">
                 <h3>Cybersecurity Basics</h3>
@@ -621,7 +657,6 @@ boolean isAuthenticated = (role != null && username != null);
                     <a href="#" class="action-link">preview</a>
                 </div>
             </div>
-            <!-- Course 7 -->
             <div class="course-card">
                 <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Cloud Computing Basics">
                 <h3>Cloud Computing Basics</h3>
@@ -631,7 +666,6 @@ boolean isAuthenticated = (role != null && username != null);
                     <a href="#" class="action-link">preview</a>
                 </div>
             </div>
-            <!-- Course 8 -->
             <div class="course-card">
                 <img src="https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Mobile App Development">
                 <h3>Mobile App Development</h3>
@@ -648,7 +682,6 @@ boolean isAuthenticated = (role != null && username != null);
     <section class="how-it-works">
         <h2>How it works</h2>
         <div class="steps">
-            <!-- Step 1 -->
             <div class="step">
                 <div class="step-circle">
                     <i class="fas fa-user-plus"></i>
@@ -656,7 +689,6 @@ boolean isAuthenticated = (role != null && username != null);
                 <h3>Sign up</h3>
                 <p>Create your account in minutes</p>
             </div>
-            <!-- Step 2 -->
             <div class="step">
                 <div class="step-circle">
                     <i class="fas fa-search"></i>
@@ -664,7 +696,6 @@ boolean isAuthenticated = (role != null && username != null);
                 <h3>Browse</h3>
                 <p>Explore our course catalog</p>
             </div>
-            <!-- Step 3 -->
             <div class="step">
                 <div class="step-circle">
                     <i class="fas fa-credit-card"></i>
@@ -672,7 +703,6 @@ boolean isAuthenticated = (role != null && username != null);
                 <h3>Purchase</h3>
                 <p>Buy your favorite courses</p>
             </div>
-            <!-- Step 4 -->
             <div class="step">
                 <div class="step-circle">
                     <i class="fas fa-graduation-cap"></i>
@@ -683,7 +713,7 @@ boolean isAuthenticated = (role != null && username != null);
         </div>
     </section>
 
-    <!-- Why Choose Coursemera (Moved from courses.jsp) -->
+    <!-- Why Choose Coursemera -->
     <section class="features">
         <div class="features-container">
             <div class="features-content">
@@ -796,11 +826,15 @@ boolean isAuthenticated = (role != null && username != null);
         // Pass authentication status to JavaScript
         const isAuthenticated = <%= isAuthenticated %>;
 
-        // Redirect logic for unauthenticated users
+        // Redirect logic for links
         document.querySelectorAll('.action-link, [data-action]').forEach(element => {
             element.addEventListener('click', (e) => {
                 e.preventDefault();
                 const action = element.getAttribute('data-action');
+                const isBrowseCourses = element.classList.contains('browse-courses-button');
+                const isPreview = element.parentElement.classList.contains('price-preview');
+                const isQuickLink = element.parentElement.parentElement.querySelector('h3')?.textContent === 'Quick Links';
+                const linkText = element.textContent.trim();
 
                 if (action === 'login') {
                     console.log('Redirecting to login.jsp');
@@ -808,11 +842,20 @@ boolean isAuthenticated = (role != null && username != null);
                 } else if (action === 'publisher-login') {
                     console.log('Redirecting to publisher_login.jsp');
                     window.location.href = 'publisher_login.jsp';
+                } else if (isQuickLink && linkText === 'About us') {
+                    console.log('Redirecting to about.jsp for About us link');
+                    window.location.href = 'about.jsp';
+                } else if (isQuickLink && (linkText === 'Certified Instructors' || linkText === 'Contact')) {
+                    console.log('Redirecting to about.jsp for ' + linkText);
+                    window.location.href = 'about.jsp';
+                } else if (isAuthenticated && (isBrowseCourses || isPreview)) {
+                    console.log('Authenticated user, redirecting to courses.jsp');
+                    window.location.href = 'courses.jsp';
                 } else if (!isAuthenticated) {
                     console.log('Unauthenticated user, redirecting to login.jsp');
                     window.location.href = 'login.jsp';
                 } else {
-                    console.log('Authenticated user, no redirect needed');
+                    console.log('Authenticated user, no specific redirect defined');
                 }
             });
         });

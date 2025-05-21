@@ -18,205 +18,284 @@ System.out.println("admin_panel.jsp: Authorized access, username: " + session.ge
     <title>Admin Panel - Coursemera</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        :root {
+            --primary-color: #005f73;
+            --secondary-color: #0a9396;
+            --accent-color: #94d2bd;
+            --dark-color: #001219;
+            --light-color: #f8fafc;
+            --text-color: #1e293b;
+            --light-text: #64748b;
+            --border-radius: 6px;
+            --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            --transition: all 0.2s ease;
+        }
+
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f1f1f1;
-            color: #333;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f1f5f9;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            color: var(--text-color);
+            line-height: 1.5;
         }
+
+        .dashboard-container {
+            width: 100vw;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
         header {
-            background-color: #fff;
-            padding: 20px 40px;
+            background: #ffffff;
+            padding: 20px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: var(--box-shadow);
         }
+
         header .logo-container {
             display: flex;
             align-items: center;
+            gap: 12px;
         }
+
         header .logo {
-            width: 80px;
-            height: 80px;
-            margin-right: 10px;
+            width: 48px;
+            height: 48px;
         }
+
         header h1 {
-            font-size: 24px;
-            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--dark-color);
             background: linear-gradient(135deg, #3498db, #1e90ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            margin: 0;
         }
+
         header nav {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 12px;
         }
+
         header nav .admin-info {
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: var(--transition);
+            color: #fff;
+            background: var(--primary-color);
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #fff;
-            font-size: 16px;
-            background: linear-gradient(135deg, #2ecc71, #27ae60);
-            padding: 8px 16px;
-            border-radius: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
         }
-        header nav .admin-info i {
-            color: #fff;
-        }
+
         header nav .admin-info:hover {
-            background: linear-gradient(135deg, #27ae60, #219653);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            transform: scale(1.05);
+            background: var(--secondary-color);
         }
+
         header nav a.logout-button {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: #fff;
             padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: var(--transition);
+            color: #fff;
+            background: #dc2626;
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+
         header nav a.logout-button:hover {
-            background: linear-gradient(135deg, #ff6655, #e74c3c);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            transform: scale(1.05);
+            background: #b91c1c;
         }
-        .admin-container {
+
+        .main-content {
             flex: 1;
-            padding: 40px 20px;
-            text-align: center;
+            padding: 24px;
+            overflow-y: auto;
+            background: #ffffff;
         }
-        .admin-container h2 {
-            font-size: 28px;
-            margin: 0 0 20px;
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0;
+            padding-bottom: 8px;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: var(--primary-color);
+        }
+
         .admin-nav {
             display: flex;
             justify-content: center;
-            gap: 20px;
-            margin-bottom: 30px;
+            gap: 12px;
+            margin-bottom: 20px;
         }
+
         .admin-nav button {
-            padding: 12px 24px;
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            font-size: 0.875rem;
             border: none;
-            border-radius: 20px;
-            font-size: 16px;
-            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: var(--transition);
+            background: #e2e8f0;
+            color: var(--text-color);
         }
+
         .admin-nav button.active {
-            background: linear-gradient(135deg, #3498db, #1e90ff);
+            background: var(--primary-color);
             color: #fff;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
-        .admin-nav button:not(.active) {
-            background: linear-gradient(135deg, #ccc, #aaa);
-            color: #333;
-        }
+
         .admin-nav button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
-        .admin-container .success {
-            color: #2ecc71;
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-        .admin-container .error {
-            color: #e74c3c;
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-        table {
-            width: 80%;
-            margin: 0 auto;
-            border-collapse: collapse;
-            background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        table th, table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        table th {
-            background-color: #3498db;
+            background: var(--secondary-color);
             color: #fff;
         }
+
+        .success {
+            color: #065f46;
+            font-size: 0.875rem;
+            text-align: center;
+            margin: 8px 0;
+            padding: 8px;
+            background: #ecfdf5;
+            border: 1px solid #6ee7b7;
+            border-radius: var(--border-radius);
+        }
+
+        .error {
+            color: #dc2626;
+            font-size: 0.875rem;
+            text-align: center;
+            margin: 8px 0;
+            padding: 8px;
+            background: #fef2f2;
+            border: 1px solid #f87171;
+            border-radius: var(--border-radius);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        table th {
+            background: var(--primary-color);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        table td {
+            font-size: 0.875rem;
+        }
+
         table td a {
-            color: #3498db;
+            color: var(--primary-color);
             text-decoration: none;
         }
+
         table td a:hover {
             text-decoration: underline;
         }
+
         table td form {
             display: inline;
-            margin: 0 5px;
-        }
-        table td button {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-        table td .approve-btn {
-            background-color: #2ecc71;
-            color: #fff;
-        }
-        table td .approve-btn:hover {
-            background-color: #27ae60;
-        }
-        table td .reject-btn {
-            background-color: #e74c3c;
-            color: #fff;
-        }
-        table td .reject-btn:hover {
-            background-color: #c0392b;
-        }
-        table td .delete-btn {
-            background-color: #e74c3c;
-            color: #fff;
-        }
-        table td .delete-btn:hover {
-            background-color: #c0392b;
-        }
-        table td .view-resume-btn {
-            background-color: #3498db;
-            color: #fff;
-            margin-right: 5px;
-        }
-        table td .view-resume-btn:hover {
-            background-color: #1e90ff;
-        }
-        footer {
-            background-color: #1a1a1a;
-            color: #fff;
-            padding: 20px 40px;
-            text-align: center;
-        }
-        footer p {
-            margin: 0;
-            font-size: 14px;
-            color: #ccc;
+            margin: 0 4px;
         }
 
-        /* Modal Styles */
+        table td button {
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            font-size: 0.875rem;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        table td .approve-btn {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        table td .approve-btn:hover {
+            background: var(--secondary-color);
+        }
+
+        table td .reject-btn {
+            background: #dc2626;
+            color: #fff;
+        }
+
+        table td .reject-btn:hover {
+            background: #b91c1c;
+        }
+
+        table td .view-resume-btn {
+            background: var(--primary-color);
+            color: #fff;
+            margin-right: 4px;
+        }
+
+        table td .view-resume-btn:hover {
+            background: var(--secondary-color);
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -224,175 +303,229 @@ System.out.println("admin_panel.jsp: Authorized access, username: " + session.ge
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.5);
             z-index: 1000;
         }
+
         .modal-content {
-            background-color: #fff;
+            background: #ffffff;
             margin: 5% auto;
             padding: 20px;
-            border-radius: 10px;
+            border-radius: var(--border-radius);
             width: 90%;
             max-width: 800px;
             text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--box-shadow);
             position: relative;
         }
+
         .modal-content h3 {
-            margin: 0 0 15px;
-            color: #333;
-            font-size: 20px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0 0 12px;
         }
+
         .modal-content p {
-            margin: 10px 0;
-            color: #666;
+            font-size: 0.875rem;
+            color: var(--light-text);
+            margin: 8px 0;
         }
+
         .modal-content object {
             width: 100%;
             height: 400px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
         }
+
         .modal-content .download-btn {
-            background-color: #8a2be2;
-            color: #fff;
-            padding: 10px 20px;
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            font-size: 0.875rem;
             border: none;
-            border-radius: 20px;
-            font-size: 16px;
             cursor: pointer;
-            margin-top: 15px;
-            transition: background-color 0.3s;
+            transition: var(--transition);
+            background: var(--primary-color);
+            color: #fff;
+            margin-top: 12px;
         }
+
         .modal-content .download-btn:hover {
-            background-color: #6a1ab6;
+            background: var(--secondary-color);
         }
+
         .close {
             position: absolute;
             top: 10px;
             right: 15px;
-            font-size: 24px;
+            font-size: 1.5rem;
             cursor: pointer;
-            color: #888;
+            color: var(--light-text);
         }
+
         .close:hover {
-            color: #555;
+            color: var(--text-color);
+        }
+
+        footer {
+            background: var(--dark-color);
+            color: var(--light-color);
+            padding: 20px 24px;
+            text-align: center;
+        }
+
+        footer p {
+            font-size: 0.875rem;
+            color: var(--light-text);
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 12px;
+                padding: 16px;
+            }
+            header nav {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .main-content {
+                padding: 16px;
+            }
+            .admin-nav {
+                flex-direction: column;
+                gap: 8px;
+            }
+            table {
+                font-size: 0.75rem;
+            }
+            table th, table td {
+                padding: 8px;
+            }
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="logo-container">
-            <img src="logo.png" alt="Coursemera Logo" class="logo">
-            <h1>Coursemera</h1>
-        </div>
-        <nav>
-            <div class="admin-info">
-                <i class="fas fa-user"></i>
-                <span><%= session.getAttribute("username") != null ? session.getAttribute("username") : "Admin" %></span>
-                <span><%= session.getAttribute("email") != null ? session.getAttribute("email") : "admin@coursemera.com" %></span>
+    <div class="dashboard-container">
+        <header>
+            <div class="logo-container">
+                <img src="logo.png" alt="Coursemera Logo" class="logo">
+                <h1>Coursemera</h1>
             </div>
-            <a href="${pageContext.request.contextPath}/logout" class="logout-button">Logout</a>
-        </nav>
-    </header>
+            <nav>
+                <div class="admin-info">
+                    <i class="fas fa-user"></i>
+                    <span><%= session.getAttribute("username") != null ? session.getAttribute("username") : "Admin" %></span>
+                    <span><%= session.getAttribute("email") != null ? session.getAttribute("email") : "admin@coursemera.com" %></span>
+                </div>
+                <a href="${pageContext.request.contextPath}/logout" class="logout-button"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </nav>
+        </header>
 
-    <!-- Admin Panel Content -->
-    <div class="admin-container">
-        <h2>Admin Panel</h2>
-        <div class="admin-nav">
-            <button class="active" onclick="showSection('publishers')">Manage Publishers</button>
-            <button onclick="window.location.href='${pageContext.request.contextPath}/admin_panel_courses.jsp'">Manage Courses</button>
-            <button onclick="window.location.href='${pageContext.request.contextPath}/admin_panel_users.jsp'">Manage Users</button>
-        </div>
-        <div id="publishers-section">
-            <h3>Publisher Approvals</h3>
-            <%
-                String success = (String) request.getAttribute("success");
-                if (success != null && !success.isEmpty()) {
-                    System.out.println("admin_panel.jsp: Displaying success message: " + success);
-            %>
-                <p class="success"><%= success %></p>
-            <%
-                }
-                String error = (String) request.getAttribute("error");
-                if (error != null && !error.isEmpty()) {
-                    System.err.println("admin_panel.jsp: Displaying error message: " + error);
-            %>
-                <p class="error"><%= error %></p>
-            <%
-                }
-                List<Publisher> pendingPublishers = (List<Publisher>) request.getAttribute("pendingPublishers");
-                System.out.println("admin_panel.jsp: Received " + (pendingPublishers != null ? pendingPublishers.size() : "null") + " pending publishers");
-                if (pendingPublishers == null || pendingPublishers.isEmpty()) {
-            %>
-                <p>No pending publisher approvals.</p>
-            <%
-                } else {
-            %>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Resume</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <%
-                            for (Publisher publisher : pendingPublishers) {
-                                System.out.println("admin_panel.jsp: Rendering publisher - ID: " + publisher.getId() + ", Name: " + publisher.getFirstName() + " " + publisher.getLastName());
-                        %>
+        <div class="main-content">
+            <section id="publishers-section">
+                <div class="section-header">
+                    <h2 class="section-title">Admin Panel</h2>
+                </div>
+                <div class="admin-nav">
+                    <button class="active" onclick="showSection('publishers')">Manage Publishers</button>
+                    <button onclick="window.location.href='${pageContext.request.contextPath}/admin_panel_courses.jsp'">Manage Courses</button>
+                    <button onclick="window.location.href='${pageContext.request.contextPath}/admin_panel_users.jsp'">Manage Users</button>
+                </div>
+                <%
+                    String success = (String) request.getAttribute("success");
+                    if (success != null && !success.isEmpty()) {
+                        System.out.println("admin_panel.jsp: Displaying success message: " + success);
+                %>
+                    <p class="success"><%= success %></p>
+                <%
+                    }
+                    String error = (String) request.getAttribute("error");
+                    if (error != null && !error.isEmpty()) {
+                        System.err.println("admin_panel.jsp: Displaying error message: " + error);
+                %>
+                    <p class="error"><%= error %></p>
+                <%
+                    }
+                    List<Publisher> pendingPublishers = (List<Publisher>) request.getAttribute("pendingPublishers");
+                    System.out.println("admin_panel.jsp: Received " + (pendingPublishers != null ? pendingPublishers.size() : "null") + " pending publishers");
+                    if (pendingPublishers == null || pendingPublishers.isEmpty()) {
+                %>
+                    <p class="error">No pending publisher approvals.</p>
+                <%
+                    } else {
+                %>
+                    <table>
+                        <thead>
                             <tr>
-                                <td><%= publisher.getFirstName() != null ? publisher.getFirstName() : "" %> <%= publisher.getLastName() != null ? publisher.getLastName() : "" %></td>
-                                <td><%= publisher.getEmail() != null ? publisher.getEmail() : "N/A" %></td>
-                                <td>
-                                    <% if (publisher.getResumeFilename() != null && publisher.getResume() != null) { %>
-                                        <button class="view-resume-btn" onclick="openModal('<%= publisher.getId() %>', '<%= publisher.getResumeFilename() %>')">View Resume</button>
-                                    <% } else { %>
-                                        No resume
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <form action="${pageContext.request.contextPath}/admin_panel" method="post">
-                                        <input type="hidden" name="publisherId" value="<%= publisher.getId() %>">
-                                        <input type="hidden" name="action" value="approve">
-                                        <button type="submit" class="approve-btn">Approve</button>
-                                    </form>
-                                    <form action="${pageContext.request.contextPath}/admin_panel" method="post">
-                                        <input type="hidden" name="publisherId" value="<%= publisher.getId() %>">
-                                        <input type="hidden" name="action" value="reject">
-                                        <button type="submit" class="reject-btn">Reject</button>
-                                    </form>
-                                </td>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Resume</th>
+                                <th>Actions</th>
                             </tr>
-                        <%
-                            }
-                        %>
-                    </tbody>
-                </table>
-            <%
-                }
-            %>
+                        </thead>
+                        <tbody>
+                            <%
+                                for (Publisher publisher : pendingPublishers) {
+                                    System.out.println("admin_panel.jsp: Rendering publisher - ID: " + publisher.getId() + ", Name: " + publisher.getFirstName() + " " + publisher.getLastName());
+                            %>
+                                <tr>
+                                    <td><%= publisher.getFirstName() != null ? publisher.getFirstName() : "" %> <%= publisher.getLastName() != null ? publisher.getLastName() : "" %></td>
+                                    <td><%= publisher.getEmail() != null ? publisher.getEmail() : "N/A" %></td>
+                                    <td>
+                                        <% if (publisher.getResumeFilename() != null && publisher.getResume() != null) { %>
+                                            <button class="view-resume-btn" onclick="openModal('<%= publisher.getId() %>', '<%= publisher.getResumeFilename() %>')">View Resume</button>
+                                        <% } else { %>
+                                            No resume
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <form action="${pageContext.request.contextPath}/admin_panel" method="post">
+                                            <input type="hidden" name="publisherId" value="<%= publisher.getId() %>">
+                                            <input type="hidden" name="action" value="approve">
+                                            <button type="submit" class="approve-btn">Approve</button>
+                                        </form>
+                                        <form action="${pageContext.request.contextPath}/admin_panel" method="post">
+                                            <input type="hidden" name="publisherId" value="<%= publisher.getId() %>">
+                                            <input type="hidden" name="action" value="reject">
+                                            <button type="submit" class="reject-btn">Reject</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <%
+                                }
+                            %>
+                        </tbody>
+                    </table>
+                <%
+                    }
+                %>
+            </section>
         </div>
-    </div>
-        
-    <!-- Footer -->
-    <footer>
-        <p>© 2025 CourseMera. All rights reserved.</p>
-    </footer>
 
-    <!-- Modal -->
-    <div id="resumeModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">×</span>
-            <h3>Resume Overview</h3>
-            <p id="modalFilename"></p>
-            <object id="pdfPreview" type="application/pdf" data="">
-                <p>PDF preview not supported by your browser. Please download the file to view it.</p>
-            </object>
-            <button class="download-btn" onclick="downloadResume()">Download</button>
+        <footer>
+            <p>© 2025 CourseMera. All rights reserved.</p>
+        </footer>
+
+        <div id="resumeModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">×</span>
+                <h3>Resume Overview</h3>
+                <p id="modalFilename"></p>
+                <object id="pdfPreview" type="application/pdf" data="">
+                    <p>PDF preview not supported by your browser. Please download the file to view it.</p>
+                </object>
+                <button class="download-btn" onclick="downloadResume()">Download</button>
+            </div>
         </div>
     </div>
 
@@ -413,22 +546,21 @@ System.out.println("admin_panel.jsp: Authorized access, username: " + session.ge
             const pdfPreview = document.getElementById('pdfPreview');
             pdfPreview.setAttribute('data', '${pageContext.request.contextPath}/admin_download_resume?publisherId=' + publisherId + '&inline=true');
             document.getElementById('resumeModal').style.display = 'block';
-            window.currentPublisherId = publisherId; // Store publisherId for download
+            window.currentPublisherId = publisherId;
         }
 
         function closeModal() {
             document.getElementById('resumeModal').style.display = 'none';
             const pdfPreview = document.getElementById('pdfPreview');
-            pdfPreview.setAttribute('data', ''); // Clear PDF to prevent caching issues
+            pdfPreview.setAttribute('data', '');
         }
 
         function downloadResume() {
             if (window.currentPublisherId) {
-                // Create a form to submit the download request
                 const form = document.createElement('form');
                 form.method = 'GET';
                 form.action = '${pageContext.request.contextPath}/admin_download_resume';
-                form.target = '_blank'; // Open in new tab to handle download
+                form.target = '_blank';
 
                 const input1 = document.createElement('input');
                 input1.type = 'hidden';
@@ -438,7 +570,7 @@ System.out.println("admin_panel.jsp: Authorized access, username: " + session.ge
                 const input2 = document.createElement('input');
                 input2.type = 'hidden';
                 input2.name = 'inline';
-                input2.value = 'false'; // Force download
+                input2.value = 'false';
 
                 form.appendChild(input1);
                 form.appendChild(input2);
@@ -446,17 +578,16 @@ System.out.println("admin_panel.jsp: Authorized access, username: " + session.ge
                 form.submit();
                 document.body.removeChild(form);
 
-                closeModal(); // Close modal after initiating download
+                closeModal();
             }
         }
 
-        // Close modal if user clicks outside
         window.onclick = function(event) {
             const modal = document.getElementById('resumeModal');
             if (event.target == modal) {
                 modal.style.display = 'none';
                 const pdfPreview = document.getElementById('pdfPreview');
-                pdfPreview.setAttribute('data', ''); // Clear PDF to prevent caching issues
+                pdfPreview.setAttribute('data', '');
             }
         }
     </script>

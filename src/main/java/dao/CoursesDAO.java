@@ -168,12 +168,13 @@ public class CoursesDAO {
         }
     }
 
-    public List<Courses> getRecentlyAddedCourses() {
+    public List<Courses> getRecentlyAddedCourses(int limit) {
         List<Courses> courses = new ArrayList<>();
-        String sql = "SELECT * FROM courses ORDER BY course_created_at DESC LIMIT 4";
+        String sql = "SELECT * FROM courses ORDER BY course_created_at DESC LIMIT ?";
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, limit);
+            ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 Courses course = new Courses();
                 course.setId(rs.getInt("course_id"));
@@ -191,6 +192,10 @@ public class CoursesDAO {
             e.printStackTrace();
         }
         return courses;
+    }
+
+    public List<Courses> getRecentlyAddedCourses() {
+        return getRecentlyAddedCourses(4); // Maintain backward compatibility
     }
 
     public List<Courses> getEnrolledCourses(int userId) {

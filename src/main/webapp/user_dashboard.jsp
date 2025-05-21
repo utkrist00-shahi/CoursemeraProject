@@ -61,20 +61,20 @@ if (successMessage != null || errorMessage != null) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Dashboard - Coursemera</title>
+    <title>Dashboard - Coursemera</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         :root {
-            --primary-color: #4a6bff;
-            --secondary-color: #ff6b6b;
-            --accent-color: #6bceff;
-            --dark-color: #2b2d42;
-            --light-color: #f8f9fa;
-            --text-color: #2d3436;
-            --light-text: #636e72;
-            --border-radius: 8px;
-            --box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            --transition: all 0.3s ease;
+            --primary-color: #005f73;
+            --secondary-color: #0a9396;
+            --accent-color: #94d2bd;
+            --dark-color: #001219;
+            --light-color: #f8fafc;
+            --text-color: #1e293b;
+            --light-text: #64748b;
+            --border-radius: 6px;
+            --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            --transition: all 0.2s ease;
         }
 
         * {
@@ -82,340 +82,387 @@ if (successMessage != null || errorMessage != null) {
             padding: 0;
             box-sizing: border-box;
         }
+
         html, body {
             height: 100%;
             margin: 0;
         }
+
         body {
-            font-family: 'Inter', Arial, sans-serif;
-            background: linear-gradient(135deg, #e6f0fa 0%, #d1e8e2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f1f5f9;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            padding: 20px;
+            color: var(--text-color);
+            line-height: 1.5;
         }
-        .dashboard-title {
-            text-align: center;
-            font-size: 3rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            background: linear-gradient(135deg, #1a3c34 0%, #2c7a7b 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 20px 0;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-        .dashboard-title:hover {
-            transform: translateY(-5px);
-        }
+
         .dashboard-container {
-            max-width: 1400px;
-            width: 100%;
-            margin: 0 auto;
-            flex: 1;
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
+
         .dashboard-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 40px;
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background: #ffffff;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: var(--box-shadow);
         }
+
         .user-profile {
             display: flex;
             align-items: center;
-            gap: 25px;
+            gap: 16px;
         }
+
         .profile-pic {
-            width: 100px;
-            height: 100px;
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #1a3c34 0%, #2c7a7b 100%);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 40px;
-            font-weight: bold;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            color: #fff;
+            font-size: 24px;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             border: 2px solid #fff;
-            transition: transform 0.3s ease;
-            position: relative;
+            transition: var(--transition);
             overflow: hidden;
         }
+
         .profile-pic img {
             width: 100%;
             height: 100%;
             border-radius: 50%;
             object-fit: cover;
         }
+
         .profile-pic:hover {
             transform: scale(1.05);
         }
+
         .user-info h2 {
             margin: 0;
-            color: #1a3c34;
-            font-size: 2rem;
-            letter-spacing: 0.5px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark-color);
         }
+
         .user-info p {
-            margin: 5px 0 0;
-            color: #666;
-            font-size: 1.1rem;
+            margin: 4px 0 0;
+            color: var(--light-text);
+            font-size: 0.875rem;
         }
+
+        .dashboard-header .button-container {
+            display: flex;
+            gap: 12px;
+        }
+
         .dashboard-header .home-btn,
         .dashboard-header .logout-btn {
-            padding: 12px 25px;
-            margin-left: 15px;
-            border-radius: 8px;
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
             text-decoration: none;
-            font-weight: bold;
-            font-size: 1rem;
-            transition: background 0.3s ease;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: var(--transition);
         }
+
         .dashboard-header .home-btn {
-            background: linear-gradient(135deg, #1a3c34 0%, #2c7a7b 100%);
-            color: white;
+            background: var(--primary-color);
+            color: #fff;
         }
+
         .dashboard-header .home-btn:hover {
-            background: linear-gradient(135deg, #15332d 0%, #226b6c 100%);
+            background: var(--secondary-color);
         }
+
         .dashboard-header .logout-btn {
-            background-color: #e74c3c;
-            color: white;
+            background: #dc2626;
+            color: #fff;
         }
+
         .dashboard-header .logout-btn:hover {
-            background-color: #c0392b;
+            background: #b91c1c;
         }
+
         .dashboard-content {
             display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 25px;
+            grid-template-columns: 240px 1fr;
             flex: 1;
+            overflow: hidden;
         }
+
         .sidebar {
-            background: #f9fafb;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            align-self: start;
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            padding: 16px;
+            overflow-y: auto;
+            height: 100%;
         }
+
         .sidebar-nav a {
             display: flex;
             align-items: center;
-            padding: 15px 20px;
-            color: #333;
+            padding: 10px 12px;
+            color: var(--text-color);
             text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            font-size: 1.1rem;
-            transition: background 0.3s ease, color 0.3s ease;
+            border-radius: var(--border-radius);
+            margin-bottom: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: var(--transition);
         }
+
         .sidebar-nav a:hover {
-            background: linear-gradient(135deg, #1a3c34 0%, #2c7a7b 100%);
-            color: white;
+            background: var(--light-color);
+            color: var(--primary-color);
         }
+
         .sidebar-nav a.active {
-            background: linear-gradient(135deg, #1a3c34 0%, #2c7a7b 100%);
-            color: white;
+            background: var(--primary-color);
+            color: #fff;
         }
+
         .sidebar-nav a i {
-            margin-right: 12px;
-            width: 24px;
+            margin-right: 8px;
+            width: 20px;
             text-align: center;
-            font-size: 1.2rem;
-            transition: transform 0.3s ease;
+            font-size: 1rem;
         }
-        .sidebar-nav a:hover i {
-            transform: translateX(5px);
-        }
+
         .main-content {
-            background: #f9fafb;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            align-self: start;
-            flex: 1;
+            background: #ffffff;
+            padding: 20px;
+            overflow-y: auto;
+            height: 100%;
+            width: 100%;
+            margin: 0;
         }
+
         .section-title {
-            margin-top: 0;
-            color: #1a3c34;
-            font-size: 1.8rem;
+            margin: 0 0 16px;
+            color: var(--dark-color);
+            font-size: 1.5rem;
+            font-weight: 600;
             position: relative;
-            padding-bottom: 12px;
+            padding-bottom: 8px;
         }
+
         .section-title::after {
             content: '';
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 60px;
-            height: 4px;
-            background: linear-gradient(135deg, #1a3c34 0%, #2c7a7b 100%);
+            width: 40px;
+            height: 3px;
+            background: var(--primary-color);
         }
+
         .info-card {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 25px;
-            border: 1px solid transparent;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: #ffffff;
+            border-radius: var(--border-radius);
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #e2e8f0;
+            transition: var(--transition);
         }
+
         .info-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-            border: 1px solid #2c7a7b;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
+
         .info-card h3 {
-            margin-top: 0;
-            color: #1a3c34;
-            font-size: 1.4rem;
+            margin: 0 0 12px;
+            color: var(--dark-color);
+            font-size: 1.125rem;
+            font-weight: 600;
         }
+
         .info-row {
             display: flex;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             align-items: center;
         }
+
         .info-label {
-            font-weight: bold;
-            width: 180px;
-            color: #555;
-            font-size: 1.1rem;
+            font-weight: 500;
+            width: 140px;
+            color: var(--light-text);
+            font-size: 0.875rem;
         }
+
         .info-value {
-            color: #333;
-            font-size: 1.1rem;
+            color: var(--text-color);
+            font-size: 0.875rem;
+            font-weight: 400;
         }
+
         .edit-form {
-            margin-top: 15px;
+            margin-top: 12px;
         }
+
         .edit-form input[type="text"],
         .edit-form input[type="email"],
         .edit-form input[type="password"],
         .edit-form input[type="file"] {
             padding: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             width: 100%;
-            max-width: 300px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            max-width: 240px;
+            border: 1px solid #d1d5db;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            transition: var(--transition);
         }
+
+        .edit-form input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
         .edit-form button {
             padding: 8px 16px;
-            background: linear-gradient(135deg, #1a3c34 0%, #2c7a7b 100%);
-            color: white;
+            background: var(--primary-color);
+            color: #fff;
             border: none;
-            border-radius: 8px;
+            border-radius: var(--border-radius);
             cursor: pointer;
-            transition: background 0.3s ease;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: var(--transition);
         }
+
         .edit-form button:hover {
-            background: linear-gradient(135deg, #15332d 0%, #226b6c 100%);
+            background: var(--secondary-color);
         }
+
         .message {
-            margin-bottom: 15px;
-            padding: 12px 20px;
-            border-radius: 6px;
-            font-weight: 600;
+            margin-bottom: 12px;
+            padding: 10px 16px;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            font-size: 0.875rem;
             text-align: center;
-            display: block;
-            width: 100%;
-            max-width: 600px;
+            max-width: 480px;
             margin-left: auto;
             margin-right: auto;
         }
+
         .message.success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 2px solid #c3e6cb;
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
         }
+
         .message.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 2px solid #f5c6cb;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #f87171;
         }
+
         .tab-content {
             display: none;
         }
+
         .tab-content.active {
             display: block;
         }
+
         .course-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
         }
+
         .course-item {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: #ffffff;
+            border-radius: var(--border-radius);
+            padding: 12px;
+            box-shadow: var(--box-shadow);
             display: flex;
             flex-direction: column;
-            transition: transform 0.3s ease;
+            transition: var(--transition);
         }
+
         .course-item:hover {
-            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
+
         .course-item img {
             width: 100%;
-            height: 150px;
+            height: 120px;
             object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 12px;
         }
+
         .course-item h4 {
-            margin: 0 0 10px;
-            color: #1a3c34;
-            font-size: 1.2rem;
+            margin: 0 0 8px;
+            color: var(--dark-color);
+            font-size: 1rem;
+            font-weight: 600;
         }
+
         .course-item p {
-            margin: 5px 0;
-            color: #666;
-            font-size: 0.9rem;
+            margin: 4px 0;
+            color: var(--light-text);
+            font-size: 0.75rem;
         }
+
         .course-item .button-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 8px;
+            margin-top: 12px;
         }
-        .view-book-btn, .delete-course-btn {
-            padding: 10px;
+
+        .view-book-btn,
+        .delete-course-btn {
+            padding: 8px;
             border-radius: var(--border-radius);
-            font-weight: 600;
+            font-weight: 500;
             border: none;
             cursor: pointer;
             transition: var(--transition);
-            font-size: 14px;
+            font-size: 0.75rem;
             text-align: center;
-            box-sizing: border-box;
-            width: 120px;
-            min-height: 40px;
+            width: 100px;
+            min-height: 32px;
         }
+
         .view-book-btn {
-            background-color: #3498db;
+            background: var(--primary-color);
             color: #fff;
         }
+
         .view-book-btn:hover {
-            transform: translateY(-2px);
+            background: var(--secondary-color);
         }
+
         .delete-course-btn {
-            background-color: #e74c3c;
+            background: #dc2626;
             color: #fff;
         }
+
         .delete-course-btn:hover {
-            transform: translateY(-2px);
+            background: #b91c1c;
         }
+
         .modal {
             display: none;
             position: fixed;
@@ -423,77 +470,74 @@ if (successMessage != null || errorMessage != null) {
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             z-index: 1000;
         }
+
         .modal-content {
-            background-color: #fff;
+            background: #ffffff;
             margin: 5% auto;
             padding: 20px;
-            border-radius: 10px;
+            border-radius: var(--border-radius);
             width: 90%;
-            max-width: 800px;
+            max-width: 720px;
             text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             position: relative;
         }
+
         .modal-content h3 {
-            margin: 0 0 15px;
-            color: #333;
-            font-size: 20px;
+            margin: 0 0 12px;
+            color: var(--dark-color);
+            font-size: 1.25rem;
+            font-weight: 600;
         }
+
         .modal-content p {
-            margin: 10px 0;
-            color: #666;
+            margin: 8px 0;
+            color: var(--light-text);
+            font-size: 0.875rem;
         }
+
         .modal-content iframe {
             width: 100%;
-            height: 400px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            height: 360px;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
         }
+
         .modal-content .download-btn {
-            background-color: #8a2be2;
+            background: #7c3aed;
             color: #fff;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border: none;
-            border-radius: 20px;
-            font-size: 16px;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
             cursor: pointer;
-            margin-top: 15px;
-            transition: background-color 0.3s;
+            margin-top: 12px;
+            transition: var(--transition);
         }
+
         .modal-content .download-btn:hover {
-            background-color: #6a1ab6;
+            background: #6d28d9;
         }
+
         .close {
             position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 24px;
+            top: 12px;
+            right: 16px;
+            font-size: 20px;
             cursor: pointer;
-            color: #888;
+            color: var(--light-text);
+            transition: var(--transition);
         }
+
         .close:hover {
-            color: #555;
-        }
-        footer {
-            background-color: #1a1a1a;
-            color: #fff;
-            padding: 20px 40px;
-            text-align: center;
-            width: 100%;
-            margin-top: auto;
-        }
-        footer p {
-            margin: 0;
-            font-size: 14px;
-            color: #ccc;
+            color: var(--text-color);
         }
     </style>
 </head>
 <body>
-    <h1 class="dashboard-title">User Dashboard</h1>
     <div class="dashboard-container">
         <div class="dashboard-header">
             <div class="user-profile">
@@ -521,7 +565,7 @@ if (successMessage != null || errorMessage != null) {
                     <p><%= user.getEmail() != null ? user.getEmail() : "No Email" %></p>
                 </div>
             </div>
-            <div>
+            <div class="button-container">
                 <a href="${pageContext.request.contextPath}/" class="home-btn">
                     <i class="fas fa-home"></i> Home
                 </a>
@@ -671,11 +715,6 @@ if (successMessage != null || errorMessage != null) {
             <button class="download-btn" onclick="downloadBook()">Download</button>
         </div>
     </div>
-
-    <!-- Footer -->
-    <footer>
-        <p>© 2025 CourseMera. All rights reserved.</p>
-    </footer>
 
     <script>
         document.querySelectorAll('.sidebar-nav a').forEach(link => {
