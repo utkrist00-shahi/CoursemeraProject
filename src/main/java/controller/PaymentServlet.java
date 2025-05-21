@@ -62,45 +62,55 @@ public class PaymentServlet extends HttpServlet {
 
         int userId = (Integer) session.getAttribute("userId");
         String action = request.getParameter("action");
-        System.out.println("PaymentServlet: Received action: " + action); // Debug log
-
         int courseId;
-        try {
-            courseId = Integer.parseInt(request.getParameter("courseId"));
-        } catch (NumberFormatException e) {
-            System.err.println("PaymentServlet: Invalid courseId format: " + request.getParameter("courseId"));
-            request.setAttribute("error", "Invalid course ID");
-            request.getRequestDispatcher("/user_dashboard").forward(request, response);
-            return;
-        }
+        double amount;
 
         if ("delete".equals(action)) {
-            System.out.println("PaymentServlet: Processing delete action for userId: " + userId + ", courseId: " + courseId);
-            Booking booking = new Booking(userId, courseId);
-            if (coursesDAO.deleteBooking(booking)) {
-                System.out.println("PaymentServlet: Successfully unenrolled userId: " + userId + " from courseId: " + courseId);
-                session.setAttribute("successMessage", "You have been unenrolled from the course successfully.");
+            String courseIdStr = request.getParameter("courseId");
+            if (courseIdStr == null || courseIdStr.trim().isEmpty()) {
+                System.err.println("PaymentServlet: courseId is null or empty for delete action");
+                session.setAttribute("errorMessage", "Invalid course ID for deletion");
+                response.sendRedirect(request.getContextPath() + "/user_dashboard");
+                return;
+            }
+            try {
+                courseId = Integer.parseInt(courseIdStr.trim());
+            } catch (NumberFormatException e) {
+                System.err.println("PaymentServlet: Invalid courseId format for delete: " + courseIdStr);
+                session.setAttribute("errorMessage", "Invalid course ID format for deletion");
+                response.sendRedirect(request.getContextPath() + "/user_dashboard");
+                return;
+            }
+
+            // Handle delete action
+            boolean deleteSuccess = coursesDAO.deleteBookingByUserAndCourse(userId, courseId);
+            if (deleteSuccess) {
+                System.out.println("PaymentServlet: Successfully deleted booking for userId: " + userId + ", courseId: " + courseId);
+                session.setAttribute("successMessage", "Successfully unenrolled from the course.");
             } else {
-                System.err.println("PaymentServlet: Failed to unenroll userId: " + userId + " from courseId: " + courseId);
+                System.err.println("PaymentServlet: Failed to delete booking for userId: " + userId + ", courseId: " + courseId);
                 session.setAttribute("errorMessage", "Failed to unenroll from the course. Please try again.");
             }
             response.sendRedirect(request.getContextPath() + "/user_dashboard");
             return;
         }
 
-        // Original payment logic
-        double amount;
+        // Existing payment logic
         try {
+            courseId = Integer.parseInt(request.getParameter("courseId"));
             amount = Double.parseDouble(request.getParameter("amount"));
         } catch (NumberFormatException e) {
-            System.err.println("PaymentServlet: Invalid amount format: " + request.getParameter("amount"));
-            request.setAttribute("error", "Invalid amount");
+            System.err.println("PaymentServlet: Invalid courseId or amount format - courseId: " + request.getParameter("courseId") + ", amount: " + request.getParameter("amount"));
+            request.setAttribute("error", "Invalid course ID or amount");
             request.getRequestDispatcher("/payment.jsp").forward(request, response);
             return;
         }
 
+        // Simulate payment processing
         boolean paymentSuccess = simulatePaymentProcessing();
+
         if (paymentSuccess) {
+            // Record payment
             Payment payment = new Payment(userId, courseId, amount, "SUCCESS");
             boolean paymentRecorded = coursesDAO.recordPayment(payment);
             if (!paymentRecorded) {
@@ -110,6 +120,7 @@ public class PaymentServlet extends HttpServlet {
                 return;
             }
 
+            // Record booking
             Booking booking = new Booking(userId, courseId);
             boolean bookingRecorded = coursesDAO.recordBooking(booking);
             if (!bookingRecorded) {
@@ -120,7 +131,7 @@ public class PaymentServlet extends HttpServlet {
             }
 
             System.out.println("PaymentServlet: Successfully processed payment and enrolled userId: " + userId + " in courseId: " + courseId);
-            session.setAttribute("successMessage", "Payment successful! You are now enrolled in the course.");
+            session.setAttribute("successMessage", "Successfully enrolled in the course!");
             response.sendRedirect(request.getContextPath() + "/user_dashboard");
         } else {
             System.err.println("PaymentServlet: Payment failed for userId: " + userId + ", courseId: " + courseId);

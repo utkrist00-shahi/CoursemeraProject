@@ -313,16 +313,25 @@ if (successMessage != null || errorMessage != null) {
         }
         .message {
             margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 4px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            display: block;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
         .message.success {
             background-color: #d4edda;
             color: #155724;
+            border: 2px solid #c3e6cb;
         }
         .message.error {
             background-color: #f8d7da;
             color: #721c24;
+            border: 2px solid #f5c6cb;
         }
         .tab-content {
             display: none;
@@ -447,6 +456,19 @@ if (successMessage != null || errorMessage != null) {
         .close:hover {
             color: #555;
         }
+        footer {
+            background-color: #1a1a1a;
+            color: #fff;
+            padding: 20px 40px;
+            text-align: center;
+            width: 100%;
+            margin-top: auto;
+        }
+        footer p {
+            margin: 0;
+            font-size: 14px;
+            color: #ccc;
+        }
     </style>
 </head>
 <body>
@@ -529,6 +551,8 @@ if (successMessage != null || errorMessage != null) {
                     <div class="info-card">
                         <h3>Course Progress</h3>
                         <p>Track your learning journey and course completion status here.</p>
+                        <!-- Placeholder for future course progress functionality -->
+                        <p>Coming soon: Detailed progress tracking with completion percentages and milestones.</p>
                     </div>
                 </div>
 
@@ -536,6 +560,12 @@ if (successMessage != null || errorMessage != null) {
                     <h2 class="section-title">My Courses</h2>
                     <div class="info-card">
                         <h3>Enrolled Courses</h3>
+                        <% if (successMessage != null) { %>
+                            <div class="message success"><%= successMessage %></div>
+                        <% } %>
+                        <% if (errorMessage != null) { %>
+                            <div class="message error"><%= errorMessage %></div>
+                        <% } %>
                         <% if (enrolledCourses != null && !enrolledCourses.isEmpty()) { %>
                             <% for (Courses course : enrolledCourses) { %>
                                 <div class="course-item">
@@ -621,6 +651,11 @@ if (successMessage != null || errorMessage != null) {
         </div>
     </div>
 
+    <!-- Footer -->
+    <footer>
+        <p>© 2025 CourseMera. All rights reserved.</p>
+    </footer>
+
     <script>
         document.querySelectorAll('.sidebar-nav a').forEach(link => {
             link.addEventListener('click', function(e) {
@@ -656,11 +691,8 @@ if (successMessage != null || errorMessage != null) {
                     return;
                 }
 
-                // Reset modal state
                 modalFilename.innerText = filename;
                 pdfPreview.src = '';
-
-                // Try primary and fallback URLs
                 const baseUrl = '${pageContext.request.contextPath}/user_download_book?courseId=' + encodeURIComponent(courseId) + '&download=false';
                 let pdfUrl = baseUrl;
                 if (!filename.startsWith('Uploads/')) {
@@ -669,7 +701,6 @@ if (successMessage != null || errorMessage != null) {
                 }
                 console.log('Setting pdfPreview src to:', pdfUrl);
 
-                // Show modal and set iframe src
                 bookModal.style.display = 'block';
                 setTimeout(() => {
                     pdfPreview.src = pdfUrl;
@@ -719,7 +750,6 @@ if (successMessage != null || errorMessage != null) {
                     return;
                 }
 
-                // Try primary and fallback URLs
                 let downloadUrl = '${pageContext.request.contextPath}/user_download_book?courseId=' + encodeURIComponent(window.currentCourseId) + '&download=true';
                 if (window.currentFilename && !window.currentFilename.startsWith('Uploads/')) {
                     downloadUrl += '&fallback=true';
@@ -727,7 +757,6 @@ if (successMessage != null || errorMessage != null) {
                 }
                 console.log('Initiating download with URL:', downloadUrl);
 
-                // Create a hidden link to trigger download
                 const link = document.createElement('a');
                 link.href = downloadUrl;
                 link.download = '';

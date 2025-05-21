@@ -212,10 +212,12 @@ public class CoursesDAO {
                 course.setCreatedAt(rs.getString("course_created_at"));
                 course.setBookPdfFilename(rs.getString("course_book_pdf_filename"));
                 enrolledCourses.add(course);
+                System.out.println("CoursesDAO: Added enrolled course ID " + course.getId() + " for userId " + userId);
             }
         } catch (SQLException e) {
             System.err.println("CoursesDAO: Error fetching enrolled courses for userId " + userId + ": " + e.getMessage());
         }
+        System.out.println("CoursesDAO: Retrieved " + enrolledCourses.size() + " enrolled courses for userId " + userId);
         return enrolledCourses;
     }
 
@@ -246,9 +248,10 @@ public class CoursesDAO {
             stmt.setInt(3, booking.getCourseId());
             stmt.setTimestamp(4, booking.getBookingDate());
             int rowsAffected = stmt.executeUpdate();
+            System.out.println("CoursesDAO: Recorded booking for userId " + booking.getUserId() + ", courseId " + booking.getCourseId() + ", rows affected: " + rowsAffected);
             return rowsAffected > 0;
         } catch (SQLException e) {
-            System.err.println("CoursesDAO: Error recording booking: " + e.getMessage());
+            System.err.println("CoursesDAO: Error recording booking for userId " + booking.getUserId() + ", courseId " + booking.getCourseId() + ": " + e.getMessage());
             return false;
         }
     }
@@ -262,6 +265,28 @@ public class CoursesDAO {
             return rowsAffected > 0;
         } catch (SQLException e) {
             System.err.println("CoursesDAO: Error deleting booking for bookingId: " + booking.getId() + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean deleteBookingByUserAndCourse(int userId, int courseId) {
+        String sql = "DELETE FROM bookings WHERE booking_user_id = ? AND booking_course_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            stmt.setInt(2, courseId);
+            System.out.println("CoursesDAO: Executing DELETE for userId=" + userId + ", courseId=" + courseId);
+            int rowsAffected = stmt.executeUpdate();
+            System.out.println("CoursesDAO: Rows affected: " + rowsAffected);
+            if (rowsAffected > 0) {
+                System.out.println("CoursesDAO: Successfully deleted booking for userId " + userId + " and courseId " + courseId);
+                return true;
+            } else {
+                System.err.println("CoursesDAO: No booking found to delete for userId " + userId + " and courseId " + courseId);
+                return false;
+            }
+        } catch (SQLException e) {
+            System.err.println("CoursesDAO: Error deleting booking for userId " + userId + ", courseId " + courseId + ": " + e.getMessage());
             return false;
         }
     }

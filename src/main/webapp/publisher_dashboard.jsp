@@ -630,7 +630,7 @@ if (error != null) {
                         <p><strong>First Name:</strong> <%= publisher != null && publisher.getFirstName() != null ? publisher.getFirstName() : "Not set" %></p>
                         <p><strong>Last Name:</strong> <%= publisher != null && publisher.getLastName() != null ? publisher.getLastName() : "Not set" %></p>
                         <p><strong>Email:</strong> <%= publisher != null && publisher.getEmail() != null ? publisher.getEmail() : "Not set" %></p>
-                        <p><strong>Resume:</strong> <%= publisher != null && publisher.getResumeFilename() != null ? "<a href='download_resume'>" + publisher.getResumeFilename() + "</a>" : "No resume uploaded." %></p>
+                        <p><strong>Resume:</strong> <%= publisher != null && publisher.getResumeFilename() != null ? "<a href='download_resume?publisherId=" + publisherId + "' target='_blank'>" + publisher.getResumeFilename() + "</a>" : "No resume uploaded." %></p>
                     </div>
                     <form action="${pageContext.request.contextPath}/ProfileManagementServlet" method="post" enctype="multipart/form-data" onsubmit="return validateProfileForm(this)">
                         <input type="hidden" name="action" value="update">
@@ -643,6 +643,13 @@ if (error != null) {
                         <input type="text" id="email" name="email" value="<%= publisher != null && publisher.getEmail() != null ? publisher.getEmail() : "" %>" required>
                         <label for="profilePicture">Update Profile Picture (optional):</label>
                         <input type="file" id="profilePicture" name="profilePicture" accept="image/*">
+                        <label for="resume">Update Resume (optional):</label>
+                        <input type="file" id="resume" name="resume" accept="application/pdf">
+                        <% if (publisher != null && publisher.getResumeFilename() != null) { %>
+                            <p>Current Resume: <%= publisher.getResumeFilename() %></p>
+                        <% } else { %>
+                            <p>Current Resume: Not uploaded</p>
+                        <% } %>
                         <div style="display: flex; gap: 8px;">
                             <button type="submit" class="save-btn">Save Changes</button>
                             <button type="reset" class="cancel-btn">Reset</button>
@@ -813,6 +820,7 @@ if (error != null) {
                 const lastName = form.querySelector('input[name="lastName"]').value.trim();
                 const email = form.querySelector('input[name="email"]').value.trim();
                 const profilePicture = form.querySelector('input[name="profilePicture"]').files[0];
+                const resume = form.querySelector('input[name="resume"]').files[0];
 
                 if (firstName === '') {
                     alert('First name is required.');
@@ -828,6 +836,10 @@ if (error != null) {
                 }
                 if (profilePicture && profilePicture.size > 2 * 1024 * 1024) { // 2MB limit
                     alert('Profile picture must be less than 2MB.');
+                    return false;
+                }
+                if (resume && resume.size > 5 * 1024 * 1024) { // 5MB limit for resume
+                    alert('Resume must be less than 5MB.');
                     return false;
                 }
                 return true;

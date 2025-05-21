@@ -376,9 +376,8 @@ System.out.println("admin_panel.jsp: Authorized access, username: " + session.ge
                 }
             %>
         </div>
-        </div>
+    </div>
         
-      
     <!-- Footer -->
     <footer>
         <p>© 2025 CourseMera. All rights reserved.</p>
@@ -400,7 +399,6 @@ System.out.println("admin_panel.jsp: Authorized access, username: " + session.ge
     <script>
         function showSection(sectionId) {
             document.getElementById('publishers-section').style.display = sectionId === 'publishers' ? 'block' : 'none';
-         
 
             document.querySelectorAll('.admin-nav button').forEach(btn => {
                 btn.classList.remove('active');
